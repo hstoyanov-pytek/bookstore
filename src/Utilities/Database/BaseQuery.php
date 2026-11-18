@@ -20,6 +20,13 @@ abstract class BaseQuery
     //    'value' => '1',
     //    'operators' => '=']
     /// ;
+    /// OR
+    /// array[] =>
+    ///     ['col' => 'id',
+    ///     'alias' => 'col_alias'
+    //    'value' => '1',
+    //    'operators' => '=']
+    ///
     /// $operator = enum of operators for the where clause, the options are limited by the enum
     /// Only one operator can be applied for a query, if NOT is selected, then it will be applied at the beginning of the query
     /// and the operator will be ignored and, AND will be applied instead
@@ -38,6 +45,7 @@ abstract class BaseQuery
 
         if(is_string($condition))
         {
+            // TODO FIX, make sure it works with bindings!!!!
             $this->queryString .= $condition;
             return $this;
         }
@@ -49,10 +57,23 @@ abstract class BaseQuery
 
         foreach ($condition as $i => $value)
         {
-            $this->queryString .= ($i !== array_key_last($condition)) ? "{$value['col']} {$value['operator']} :{$value['col']} " . ($operator === WhereOp::NOT ? WhereOp::AND->value : $operator->value)
-            : "{$value['col']} {$value['operator']} :{$value['col']} ";
+            if(empty($value['alias']))
+            {
+                $this->queryString .= ($i !== array_key_last($condition)) ?
+                    "{$value['col']} {$value['operator']} :{$value['col']} " . ($operator === WhereOp::NOT ? WhereOp::AND->value : $operator->value)
+                : "{$value['col']} {$value['operator']} :{$value['col']} ";
 
-            $this->createBinds($value['col'], $value['value']);
+                $this->createBinds($value['col'], $value['value']);
+            }
+            else
+            {
+                $this->queryString .= ($i !== array_key_last($condition)) ?
+                    "{$value['col']} {$value['operator']} :{$value['alias']} " . ($operator === WhereOp::NOT ? WhereOp::AND->value : $operator->value)
+                    : "{$value['col']} {$value['operator']} :{$value['alias']} ";
+
+                $this->createBinds($value['alias'], $value['value']);
+            }
+
         }
 
         return $this;
@@ -107,7 +128,6 @@ abstract class BaseQuery
                 $stmt->setFetchMode(PDO::FETCH_CLASS, $modelClass);
             }
 
-
             $this->clearProperties();
             return $stmt->fetch();
         }
@@ -118,6 +138,7 @@ abstract class BaseQuery
         }
 
         $stmt->execute();
+
         if (empty($modelClass))
         {
             $stmt->setFetchMode(PDO::FETCH_ASSOC);

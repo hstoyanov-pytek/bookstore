@@ -6,6 +6,7 @@ use \App\Model\AuthorModel;
 use \App\Model\PublisherModel;
 use \App\Model\GenresModel;
 use \App\Model\LanguagesModel;
+use \App\Model\BookDetailsDTO;
 
 class BookRepository
 {
@@ -30,12 +31,54 @@ class BookRepository
         return $result;
     }
 
-    public function fetchBookById(int $id) : null|array|BookModel
+    public function fetchBookById(int $id) : null|array|BookDetailsDTO
     {
-        $whereBook = $this->database->createParams(['id'],[$id],['=']);
+        $whereBook = $this->database->createParams(['book.id'],['book_id'],[$id],['=']);
+//        SELECT book.title as book_title,
+//        publisher.name as publisher,
+//        book.year_published as year_published,
+//        author.name as author,
+//        genres.name as genre,
+//        languages.name as language
+//
+//        FROM book
+//        INNER JOIN publisher ON book.publisher_id = publisher.id
+//
+//        INNER JOIN book_author ON book.id = book_author.book_id
+//        INNER JOIN author ON book_author.author_id = author.id
+//
+//        INNER JOIN book_genres ON book.id = book_genres.book_id
+//        INNER JOIN genres ON book_genres.genres_id = genres.id
+//
+//        INNER JOIN book_languages ON book.id = book_languages.book_id
+//        INNER JOIN languages ON book_languages.languages_id = languages.id;
 
-        $result = $this->database::$select->select("")->from("book")->where($whereBook)->getResult(BookModel::class);
-        //SELECT book.title as book_title, publisher.name as publisher_name, book.year_published as year_published FROM book INNER JOIN publisher ON book.publisher_id = publisher.id;
+        $result = $this->database::$select
+            ->select("
+                book.id as book_id,
+                book.title as book_title,
+                book.year_published as year_published,
+                book.deleted as book_available,
+                publisher.name as publisher,
+                author.name as book_author,
+                genres.name as book_genres,
+                languages.name as book_languages
+            ")
+            ->from("book")
+            ->innerJoin("publisher", "book.publisher_id = publisher.id")
+
+            ->innerJoin("book_author", "book.id = book_author.book_id")
+            ->innerJoin("author", "book_author.author_id = author.id")
+
+            ->innerJoin("book_genres", "book.id = book_genres.book_id")
+            ->innerJoin("genres", "book_genres.genres_id = genres.id")
+
+            ->innerJoin("book_languages", "book.id = book_languages.book_id")
+            ->innerJoin("languages", "book_languages.languages_id = languages.id")
+
+            ->where($whereBook)
+            ->getResult(BookDetailsDTO::class);
+
 
         if(!empty($result))
         {

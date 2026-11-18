@@ -16,26 +16,42 @@ class Database
         self::$delete = new Delete($pdo);
     }
 
-    public function createParams(array $cols, array $values, array $operators) : array
+    ///
+    /// IMPORTANT, When passing alias, make sure to have aliases equal to columns else there will be an argument mismatch
+    /// and the function will throw exception
+    public function createParams(array $cols, array $alias = array(), array $values, array $operators) : array
     {
         $params = array();
-        if(max(count($cols), count($values), count($operators)) !== count($cols))
+        if(max(count($cols), count($values), count($alias), count($operators)) !== count($cols))
             throw new \Exception("Mismatch in number of arguments passed in createParams!");
 
         ///
         // $params = array(
         //  ['col' => 'id',
+        //  'alias' => 'columnAlias'
         //  'value' => '1',
         //  'operator' => '=']
         // );
         ///
         for($i = 0; $i < count($cols); $i++)
         {
-            $params[] = [
-                'col' => $cols[$i],
-                'value' => $values[$i],
-                'operator' => $operators[$i]
-            ];
+            if(empty($alias))
+            {
+                $params[] = [
+                    'col' => $cols[$i],
+                    'value' => $values[$i],
+                    'operator' => $operators[$i]
+                ];
+            }
+            else
+            {
+                $params[] = [
+                    'col' => $cols[$i],
+                    'alias' => $alias[$i],
+                    'value' => $values[$i],
+                    'operator' => $operators[$i]
+                ];
+            }
         }
 
         return $params;
