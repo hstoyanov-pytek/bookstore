@@ -40,7 +40,6 @@ class Select extends BaseQuery
             $this->queryString .= $i !== array_key_last($columns) ? "{$columns[$i]}, " : "{$columns[$i]}";
         }
 
-
         return $this;
     }
 
@@ -96,7 +95,7 @@ class Select extends BaseQuery
         {
             throw new \Exception("ON Condition is empty when calling INNER_JOIN");
         }
-
+        /// TODO BINDINGS!!!!
         $this->queryString .= ' ON ';
 
         if(is_string($condition))

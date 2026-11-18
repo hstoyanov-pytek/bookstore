@@ -1,5 +1,5 @@
 <ul>
-<?php foreach($results as $result): ?>
+<?php foreach($availableResults as $result): ?>
     <li>
         <a href="index.php?<?php echo http_build_query(['page' => 'book','book_id' => $result->id]); ?>"><?php echo e($result->title); ?></a>
     </li>

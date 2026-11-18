@@ -11,7 +11,6 @@
         <header>
         <h1> <a href="index.php">Pytek Bookstore</a> </h1>
             <p>Local bookstore</p>
-
         </header>
             <main>
                 <?php echo $contents; ?>

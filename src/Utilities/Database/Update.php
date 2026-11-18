@@ -26,6 +26,7 @@ class Update extends BaseQuery
     /// $columns = assoc_array
     /// [
     ///     'col' => 'colName',
+    ///     'alias' => 'col_alias'
     ///     'value => 'value'
     /// ]
     ///
@@ -33,12 +34,26 @@ class Update extends BaseQuery
     {
         $this->queryString .= " SET ";
 
-        foreach ($columns as $column => $val)
-        {
-            $this->queryString .= ($column !== array_key_last($columns)) ? "{$column} = :{$column}, "
-                : "{$column} = :{$column}";
+        $aliasExist = array_key_exists("alias", $columns);
 
-            $this->createBinds($column, $val);
+        foreach ($columns as $i => $val)
+        {
+            if(!$aliasExist)
+            {
+                $this->queryString .= ($i !== array_key_last($columns)) ?
+                    "{$val['col']} = :{$val['col']}, "
+                    : "{$val['col']} = :{$val['col']}";
+
+                $this->createBinds($val['col'], $val['value']);
+            }
+            else
+            {
+                $this->queryString .= ($i !== array_key_last($columns)) ?
+                    "{$val['col']} = :{$val['alias']}, "
+                    : "{$val['col']} = :{$val['alias']} ";
+
+                $this->createBinds($val['alias'], $val['value']);
+            }
         }
 
         return $this;

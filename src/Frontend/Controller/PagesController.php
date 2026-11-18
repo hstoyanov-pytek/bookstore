@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Frontend\Controller;
+use \App\Model\BookDetailsDTO;
 
 class PagesController extends BaseController
 {
@@ -11,13 +12,15 @@ class PagesController extends BaseController
     public function displayLandingPage()
     {
         $results = $this->repository->fetchAll();
+        $availableResults = $this->repository->fetchAllAvailable();
         if(empty($results))
         {
             echo "No results found";
         }
 
         $this->displayPage("index", [
-            'results' => $results
+            'results' => $results,
+            'availableResults' => $availableResults
         ]);
     }
 
@@ -55,11 +58,11 @@ class PagesController extends BaseController
                 $values['available'] = false;
             }
 
-            $params = [
-                'values' => $values
-            ];
+            $details = new BookDetailsDTO();
+            $details->arrayToObject($values);
+            $details->book_id = $id;
 
-            $this->repository->updateById($id, $params);
+            $this->repository->updateById($id, $details);
             header("Location: index.php");
         }
 
@@ -67,6 +70,7 @@ class PagesController extends BaseController
         $authors = $this->repository->fetchAllAuthors();
         $genres = $this->repository->fetchAllGenres();
         $languages = $this->repository->fetchAllLanguages();
+        $publishers = $this->repository->fetchAllPublishers();
 
         if(empty($result))
         {
@@ -78,7 +82,8 @@ class PagesController extends BaseController
             'result' => $result,
             'authors' => $authors,
             'genres' => $genres,
-            'languages' => $languages
+            'languages' => $languages,
+            'publishers' => $publishers
         ]);
     }
 
@@ -112,7 +117,7 @@ class PagesController extends BaseController
     {
         if(!empty($id))
         {
-            $this->repository->deleteEntry($id);
+            $this->repository->deleteBookEntry($id);
         }
 
         $results = $this->repository->fetchAll();

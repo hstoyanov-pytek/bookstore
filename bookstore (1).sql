@@ -55,14 +55,14 @@ CREATE TABLE `book` (
   `publisher_id` int(11) DEFAULT NULL,
   `year_published` date DEFAULT NULL,
   `cover_path` varchar(255) DEFAULT NULL,
-  `deleted` tinyint(1) DEFAULT NULL
+  `available` tinyint(1) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 --
 -- Dumping data for table `book`
 --
 
-INSERT INTO `book` (`id`, `title`, `publisher_id`, `year_published`, `cover_path`, `deleted`) VALUES
+INSERT INTO `book` (`id`, `title`, `publisher_id`, `year_published`, `cover_path`, `available`) VALUES
 (82, 'Animal Farm', 21, '2026-11-28', NULL, NULL),
 (83, 'Nineteen Eighty-Four', 21, '2026-11-22', NULL, NULL),
 (84, 'A Clergyman\'s Daughter', 22, '2026-11-12', NULL, NULL),

@@ -14,26 +14,110 @@ class BookRepository
         private \App\Utilities\Database\Database $database
     ){}
 
+
+    private function updateTable(string $selectColumn, $selectValue, string $selectTableName, string $selectModelClass,
+                                 string $whereUpdateColumn, $whereUpdateValue, string $updateTable, string $updateColumn)
+    {
+/// Templatised version of:
+//        $whereLanguage = $this->database->createParams(cols:['name'], values:[$detailsDTO->book_languages], operators:['=']);
+//        $languageResult = $this->database::$select
+//            ->select("id")
+//            ->from("languages")
+//            ->where($whereLanguage)
+//            ->getResult(LanguagesModel::class);
+//
+//        $whereUpdateBook_Languages = $this->database->createParams(cols:['book_id'], values:[$id], operators:['=']);
+//        $this->database::$update
+//            ->update("book_languages")
+//            ->set(array(['col' => 'languages_id', 'value' => (int)$languageResult->id]))
+//            ->where($whereUpdateBook_Languages)
+//            ->exec();
+        $whereSelect = $this->database->createParams(cols:[$selectColumn], values:[$selectValue], operators:['=']);
+        $selectResult = $this->database::$select
+            ->select("id")
+            ->from($selectTableName)
+            ->where($whereSelect)
+            ->getResult($selectModelClass);
+
+        $whereUpdate = $this->database->createParams(cols:[$whereUpdateColumn], values:[$whereUpdateValue], operators:['=']);
+        $this->database::$update
+            ->update($updateTable)
+            ->set(array(['col' => $updateColumn, 'value' => $selectResult->id]))
+            ->where($whereUpdate)
+            ->exec();
+    }
+
+    /// RETURNS entry if it doesn't exist it creates it and returns it
+    private function getEntry(string $table, array $whereParams, string $modelClass, array $insertCols = array(), array $insertVals = array()) : object
+    {
+        $query = $this->database::$select->select("")->from($table)->where($whereParams);
+        var_dump($query);
+
+        $foundEntry = $query->getResult($modelClass);
+
+        if(empty($foundEntry) && !empty($insertCols) && !empty($insertVals))
+        {
+            $this->database::$insert->insertInto($table, $insertCols)->values($insertVals)->exec();
+
+            return $this->getEntry($table, $whereParams, $modelClass);
+        }
+
+        return $foundEntry;
+    }
+
     public function fetchAll() : array
     {
         $result = $this->database::$select->select("")->from("book")->orderBy("id")->getResults(BookModel::class);
         return $result;
     }
 
-    public function fetchByName(string $title) : array
+    public function fetchAllAvailable() : array
     {
-        $result = $this->database::$select->select("")->from("book")->where([
-            'col' => "title",
-            'value'=> $title,
-            'operator' => "="
-        ])->getResults();
+        $whereAvailable = $this->database->createParams(cols: ['available'], values:['1'], operators:['=']);
+
+        return $this->database::$select
+            ->select("")
+            ->from("book")
+            ->where($whereAvailable)
+            ->getResults(BookModel::class);
+    }
+
+    public function fetchBookByName(string $title) : null|array|BookDetailsDTO
+    {
+        $whereBook = $this->database->createParams(cols:['book.title'], alias:['bookTitle'], values:[$title], operators:["="]);
+
+        $result = $this->database::$select
+            ->select("
+                book.id as book_id,
+                book.title as book_title,
+                book.year_published as year_published,
+                book.available as book_available,
+                publisher.name as publisher,
+                author.name as book_author,
+                genres.name as book_genres,
+                languages.name as book_languages
+            ")
+            ->from("book")
+            ->innerJoin("publisher", "book.publisher_id = publisher.id")
+
+            ->innerJoin("book_author", "book.id = book_author.book_id")
+            ->innerJoin("author", "book_author.author_id = author.id")
+
+            ->innerJoin("book_genres", "book.id = book_genres.book_id")
+            ->innerJoin("genres", "book_genres.genres_id = genres.id")
+
+            ->innerJoin("book_languages", "book.id = book_languages.book_id")
+            ->innerJoin("languages", "book_languages.languages_id = languages.id")
+
+            ->where($whereBook)
+            ->getResult(BookDetailsDTO::class);
 
         return $result;
     }
 
     public function fetchBookById(int $id) : null|array|BookDetailsDTO
     {
-        $whereBook = $this->database->createParams(['book.id'],['book_id'],[$id],['=']);
+        $whereBook = $this->database->createParams(cols: ['book.id'], alias:['book_id'], values:[$id], operators:['=']);
 //        SELECT book.title as book_title,
 //        publisher.name as publisher,
 //        book.year_published as year_published,
@@ -58,7 +142,7 @@ class BookRepository
                 book.id as book_id,
                 book.title as book_title,
                 book.year_published as year_published,
-                book.deleted as book_available,
+                book.available as book_available,
                 publisher.name as publisher,
                 author.name as book_author,
                 genres.name as book_genres,
@@ -88,33 +172,88 @@ class BookRepository
         return null;
     }
 
-    public function updateById(int $id, array $newData)
+    public function updateById(int $id, BookDetailsDTO $detailsDTO)
     {
+        $whereBookUpdate = $this->database->createParams(cols: ['id'], values:[$id], operators:['=']);
+
+        if(empty($detailsDTO))
+            throw new \Exception("BOOK DETAILS DTO is null");
+
+        $wherePublisherUpdate = $this->database->createParams(cols:['name'], values:[$detailsDTO->publisher], operators: ['=']);
+        $publisherResult = $this->database::$select
+            ->select("id")
+            ->from("publisher")
+            ->where($wherePublisherUpdate)
+            ->getResult(PublisherModel::class);
+
+        $bookCols = array(
+            ['col' => 'title', 'value'=> $detailsDTO->book_title],
+            ['col' => 'year_published', 'value' => $detailsDTO->year_published],
+            ['col' => 'available', 'value' => (int)$detailsDTO->book_available],
+            ['col' => 'publisher_id', 'value'=>$publisherResult->id]
+        );
+
+        $this->database::$update
+            ->update("book")
+            ->set($bookCols)
+            ->where($whereBookUpdate)
+            ->exec();
 
 
-        $whereParams = $this->database->createParams(['id'],[$id],['=']);
-        $this->database::$update->update("book")->set($newData)->where($whereParams)->exec();
+        $this->updateTable(
+            selectTableName: "languages",
+            selectColumn:  "name",
+            selectValue: $detailsDTO->book_languages,
+            selectModelClass: LanguagesModel::class,
+            whereUpdateColumn: "book_id",
+            whereUpdateValue: $id,
+            updateTable: "book_languages",
+            updateColumn: "languages_id",
+        );
+
+        $this->updateTable(
+            selectTableName: "author",
+            selectColumn: "name",
+            selectValue: $detailsDTO->book_author,
+            selectModelClass: AuthorModel::class,
+            whereUpdateColumn: 'book_id',
+            whereUpdateValue: $id,
+            updateTable: "book_author",
+            updateColumn: "author_id"
+        );
+
+        $this->updateTable(
+            selectTableName: "genres",
+            selectColumn: "name",
+            selectValue: $detailsDTO->book_genres,
+            selectModelClass: GenresModel::class,
+            whereUpdateColumn: 'book_id',
+            whereUpdateValue: $id,
+            updateTable: "book_genres",
+            updateColumn: "genres_id"
+        );
+
     }
 
     public function createEntry(array $newData)
     {
         extract($newData);
 
-        $whereAuthor = $this->database->createParams(['name'],[$author],['=']);
+        $whereAuthor = $this->database->createParams(cols:['name'], values:[$author], operators:['=']);
         $authorEntry = $this->getEntry("author", $whereAuthor, AuthorModel::class, insertCols: array('name'), insertVals: array($author));
 
-        $wherePublisher = $this->database->createParams(['name'], [$publisher], ['=']);
+        $wherePublisher = $this->database->createParams(cols: ['name'], values: [$publisher], operators: ['=']);
         $publisherEntry = $this->getEntry("publisher", $wherePublisher, PublisherModel::class, insertCols: array('name'), insertVals: array($publisher));
 
-        $whereGenre = $this->database->createParams(['name'],[$genre],['=']);
+        $whereGenre = $this->database->createParams(cols: ['name'], values:[$genre], operators:['=']);
         $genreEntry = $this->getEntry('genres', $whereGenre, GenresModel::class, insertCols: array('name'), insertVals: array($genre));
 
-        $whereLanguage = $this->database->createParams(['name'],[$language],['=']);
+        $whereLanguage = $this->database->createParams(cols: ['name'], values: [$language], operators:['=']);
         $languageEntry = $this->getEntry('languages', $whereLanguage, LanguagesModel::class, insertCols: array('name'), insertVals: array($language));
 
         $this->database::$insert->insertInto("book", ['title', 'publisher_id', 'year_published'])->values(array($title, $publisherEntry->id, $year_published))->exec();
 
-        $bookWhere = $this->database->createParams(['title', 'publisher_id'],[$title, $publisherEntry->id],['=', '=']);
+        $bookWhere = $this->database->createParams(cols: ['title', 'publisher_id'], values: [$title, $publisherEntry->id], operators:['=', '=']);
         $book = $this->database::$select->select('id')->from("book")->where($bookWhere)->getResult(BookModel::class);
 
         $this->database::$insert->insertInto("book_author", ['book_id', 'author_id'])->values(array($book->id , $authorEntry->id))->exec();
@@ -122,10 +261,25 @@ class BookRepository
         $this->database::$insert->insertInto("book_languages", ['book_id', 'languages_id'])->values(array($book->id, $languageEntry->id))->exec();
     }
 
-    public function deleteEntry(int $id)
+    public function deleteBookEntry(int $id, bool $softDelete = false)
     {
         $whereParams = $this->database->createParams(['id'], [$id], ['=']);
-        $this->database::$delete->delete()->from("book")->where($whereParams)->exec();
+        if($softDelete)
+        {
+            $this->database::$update
+                ->update("book")
+                ->set(array(['col' => "available", 'value' => 0]))
+                ->where($whereParams)
+                ->exec();
+        }
+        else
+        {
+            $this->database::$delete
+                ->delete()
+                ->from("book")
+                ->where($whereParams)
+                ->exec();
+        }
     }
 
     public function fetchAllAuthors() : array
@@ -143,20 +297,8 @@ class BookRepository
         return $this->database::$select->select("")->from("languages")->getResults(LanguagesModel::class);
     }
 
-    /// RETURNS entry if it doesn't exist it creates it and returns it
-    public function getEntry(string $table, array $whereParams, string $modelClass, array $insertCols = array(), array $insertVals = array()) : object
+    public function fetchAllPublishers() : array
     {
-        $query = $this->database::$select->select("")->from($table)->where($whereParams);
-        var_dump($query);
-        $foundEntry = $query->getResult($modelClass);
-
-        if(empty($foundEntry) && !empty($insertCols) && !empty($insertVals))
-        {
-            $this->database::$insert->insertInto($table, $insertCols)->values($insertVals)->exec();
-
-            return $this->getEntry($table, $whereParams, $modelClass);
-        }
-
-        return $foundEntry;
+        return $this->database::$select->select("name")->from("publisher")->getResults(PublisherModel::class);
     }
 }
