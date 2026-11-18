@@ -1,0 +1,186 @@
+<?php
+
+namespace App\Utilities\Database;
+use PDO;
+use App\Utilities\WhereOp;
+
+abstract class BaseQuery
+{
+    public function __construct(
+        private PDO $pdo
+    ) {}
+
+    public string $queryString = "";
+    protected array $binds = array();
+    ///
+    /// $conditions = assoc_array/string of conditions that need to be met for the query to go through
+    /// string => "A > B OR C = D AND id BETWEEN 3 AND 30"; ...
+    /// array[] =>
+    ///     ['col' => 'id',
+    //    'value' => '1',
+    //    'operators' => '=']
+    /// ;
+    /// $operator = enum of operators for the where clause, the options are limited by the enum
+    /// Only one operator can be applied for a query, if NOT is selected, then it will be applied at the beginning of the query
+    /// and the operator will be ignored and, AND will be applied instead
+    ///
+    public function where(string|array $condition, WhereOp $operator = WhereOp::AND)
+    {
+        $this->queryString .= " WHERE ";
+
+        if($operator === WhereOp::NOT) $this->queryString .= $operator->value;
+
+        if(empty($condition))
+        {
+            $this->queryString .= "1";
+            return $this;
+        }
+
+        if(is_string($condition))
+        {
+            $this->queryString .= $condition;
+            return $this;
+        }
+
+        if(!is_array($condition))
+        {
+            throw new \Exception ("Condition is not string or array when calling WHERE");
+        }
+
+        foreach ($condition as $i => $value)
+        {
+            $this->queryString .= ($i !== array_key_last($condition)) ? "{$value['col']} {$value['operator']} :{$value['col']} " . ($operator === WhereOp::NOT ? WhereOp::AND->value : $operator->value)
+            : "{$value['col']} {$value['operator']} :{$value['col']} ";
+
+            $this->createBinds($value['col'], $value['value']);
+        }
+
+        return $this;
+    }
+
+    public function getResults(string $modelClass = "") : array
+    {
+        $stmt = $this->pdo->prepare($this->queryString);
+
+        if(empty($this->binds))
+        {
+            $stmt->execute();
+            if(empty($modelClass))
+            {
+                $this->clearProperties();
+                return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            }
+
+            $this->clearProperties();
+            return $stmt->fetchAll(PDO::FETCH_CLASS, $modelClass);
+        }
+
+        foreach ($this->binds as $bind)
+        {
+            $stmt->bindValue($bind['key'], $bind['value'], $bind['type']);
+        }
+        $stmt->execute();
+
+        if(empty($modelClass))
+        {
+            $this->clearProperties();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+
+        $this->clearProperties();
+        return $stmt->fetchAll(PDO::FETCH_CLASS, $modelClass);
+    }
+
+    public function getResult(string $modelClass = "") : null|object|array
+    {
+        $stmt = $this->pdo->prepare($this->queryString);
+
+        if(empty($this->binds))
+        {
+            $stmt->execute();
+            if (empty($modelClass))
+            {
+                $stmt->setFetchMode(PDO::FETCH_ASSOC);
+            }
+            else
+            {
+                $stmt->setFetchMode(PDO::FETCH_CLASS, $modelClass);
+            }
+
+
+            $this->clearProperties();
+            return $stmt->fetch();
+        }
+
+        foreach ($this->binds as $bind)
+        {
+            $stmt->bindValue($bind['key'], $bind['value'], $bind['type']);
+        }
+
+        $stmt->execute();
+        if (empty($modelClass))
+        {
+            $stmt->setFetchMode(PDO::FETCH_ASSOC);
+        }
+        else
+        {
+            $stmt->setFetchMode(PDO::FETCH_CLASS, $modelClass);
+        }
+
+        $result = $stmt->fetch();
+        if(!empty($result))
+        {
+            $this->clearProperties();
+            return $result;
+        }
+
+        $this->clearProperties();
+        return null;
+    }
+
+    public function exec() : void
+    {
+        $stmt = $this->pdo->prepare($this->queryString);
+
+        foreach ($this->binds as $bind)
+        {
+            $stmt->bindValue($bind['key'], $bind['value'], $bind['type']);
+        }
+        $stmt->execute();
+
+        $this->clearProperties();
+    }
+
+    public function from(string $table)
+    {
+        if(empty($table))
+        {
+            throw new \Exception("Missing FROM table");
+        }
+        $this->queryString .= " FROM " .$table;
+
+        return $this;
+    }
+
+    protected function createBinds(string $column, string $value)
+    {
+        $type = PDO::PARAM_STR;
+        if(is_numeric($value))
+        {
+            $value += 0; // convert the string to int/float
+            if(is_int($value)) $type = PDO::PARAM_INT; // test if the value is integer, and leave float as a string
+        }
+
+        $this->binds[] = [
+            'key' => ":{$column}",
+            'value' => "{$value}",
+            'type' => $type
+        ];
+    }
+
+    private function clearProperties()
+    {
+        $this->queryString = "";
+        $this->binds = array();
+    }
+}
