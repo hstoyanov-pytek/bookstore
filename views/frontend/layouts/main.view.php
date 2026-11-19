@@ -9,8 +9,16 @@
     </head>
     <body>
         <header>
-        <h1> <a href="index.php">Pytek Bookstore</a> </h1>
+        <h1> <a href="/">Pytek Bookstore</a> </h1>
             <p>Local bookstore</p>
+            <nav>
+                <a href="/">Home</a>
+                <a href="/authors">Authors</a>
+                <a href="/genres">Genres</a>
+                <a href="/languages">Languages</a>
+                <a href="/publishers">Publishers</a>
+            </nav>
+
         </header>
             <main>
                 <?php echo $contents; ?>

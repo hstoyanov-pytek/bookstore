@@ -1,16 +1,11 @@
 <h1>Create a book entry: </h1>
 
-<form method="POST" action="index.php?<?php echo http_build_query(['page' => 'create'])?>">
+<form method="POST" action="/create" enctype="multipart/form-data">
 
     <label for="title">Title: </label>
     <input type="text" id="title" name="title" value=""/>
 
     <label for="author">Author: </label>
-<!--    <select name="author" id="author">-->
-<!--        --><?php //foreach($authors as $author): ?>
-<!--            <option value="--><?php //echo e($author->name); ?><!--">--><?php //echo e($author->name);?><!--</option>-->
-<!--        --><?php //endforeach;?>
-<!--    </select>-->
     <input type="text" name="author" id="author" value=""/>
 
     <label for="genre">Genre: </label>
@@ -32,6 +27,10 @@
 
     <label for="year_published">Year published: </label>
     <input type="date" id="year_published" name="year_published" value="<?php echo date("Y-m-d)");?>"/>
+
+    <br>
+    <label for="cover">Cover Image</label>
+    <input type="file" id="cover" name="cover"/>
 
     <br>
     <input type="submit">

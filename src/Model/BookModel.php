@@ -8,6 +8,6 @@ class BookModel
     public string $title;
     public ?int $publisher_id;
     public ?string $year_published;
-    public ?string $cover_path; // ? -> to allow a null field
+    public ?string $cover_name;
     public bool $available;
 }

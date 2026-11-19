@@ -9,10 +9,10 @@ class BaseController
         extract($params);
 
         ob_start();
-        require __DIR__ . '/../../../views/frontend/' . $view . '.view.php';
+        require_once __DIR__ . '/../../../views/frontend/' . $view . '.view.php';
 
         $contents = ob_get_clean();
 
-        require __DIR__ . '/../../../views/frontend/layouts/main.view.php';
+        require_once __DIR__ . '/../../../views/frontend/layouts/main.view.php';
     }
 }

@@ -1,7 +1,5 @@
 <?php
-require __DIR__ . '/inc/all.inc.php';
-use \App\Utilities\Database\Database;
-use App\Utilities\WhereOp;
+require_once __DIR__ . '/inc/all.inc.php';
 
 /// ============================CONTAINER========================================
 $container = new \App\Utilities\Container();
@@ -31,40 +29,21 @@ $container->bind("database", function() use($container)
 
 /// ============================END CONTAINER========================================
 
-$route = @(string)($_GET['route'] ?? 'pages');
+$pagesController = $container->get("pagesController");
+$router = new \App\Router\Router();
+$router->add("GET", '', [$pagesController, 'displayLandingPage']);
+$router->add("GET", '/', [$pagesController, 'displayLandingPage']);
+$router->add("GET", '/book', [$pagesController, 'displayBookPage']);
+$router->add("GET", '/edit', [$pagesController, 'editBookEntry']);
+$router->add("POST", '/edit', [$pagesController, 'editBookEntry']);
+$router->add("POST", '/delete', [$pagesController, 'deleteBookEntryById']);
+$router->add("GET", '/create', [$pagesController, 'createBookEntry']);
+$router->add("POST", '/create', [$pagesController, 'createBookEntry']);
+$router->add("GET", '/authors', [$pagesController, 'displayAllAuthors']);
+$router->add("GET", '/genres', [$pagesController, 'displayAllGenres']);
+$router->add("GET", '/languages', [$pagesController, 'displayAllLanguages']);
+$router->add("GET", '/publishers', [$pagesController, 'displayAllPublishers']);
 
-//Database::$insert->insertInto("book", ['title', 'publisher_id, year_published'])->values(array(['Book1', 2, 2011],['Book2', 1, 2102],['Book3'], ['Book4']))->getResults();
-//Database::$insert->insertInto("book", ['title'])->values(array(['Book3', 1 , 1231]))->getResults();
-//Database::$select->select("")->from("book")->getResults(\App\Model\BookModel::class);
-//Database::$update->update("book")->set(array([ 'col' => 'publisher_id', 'value'=> '2']))->where("id = 31")->getResults();
-//Database::$delete->delete()->from("book")->where("id = 31")->getResults();
 
-if($route === 'pages')
-{
-    $page = @(string)($_GET['page'] ?? 'index');
-    $pagesController = $container->get("pagesController");
-
-    if($page === "book")
-    {
-        $id = @(int)($_GET['book_id'] ?? 1);
-        $pagesController->displayBookPage($id);
-    }
-    else if($page === "edit")
-    {
-        $id = @(int)($_GET['book_id'] ?? 1);
-        $pagesController->editBookEntry($id);
-    }
-    else if($page === "create")
-    {
-        $pagesController->createBookEntry();
-    }
-    else if($page === "delete")
-    {
-        $id = @(int)($_POST['id']);
-        $pagesController->deleteBookEntryById($id);
-    }
-    else
-    {
-        $pagesController->displayLandingPage();
-    }
-}
+$path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$router->dispatch($path);

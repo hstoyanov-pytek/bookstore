@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Nov 17, 2026 at 02:33 PM
+-- Generation Time: Nov 19, 2026 at 03:28 PM
 -- Server version: 11.8.6-MariaDB-0+deb13u1 from Debian
 -- PHP Version: 8.4.27
 
@@ -20,8 +20,6 @@ SET time_zone = "+00:00";
 --
 -- Database: `bookstore`
 --
-CREATE DATABASE IF NOT EXISTS `bookstore` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_uca1400_ai_ci;
-USE `bookstore`;
 
 -- --------------------------------------------------------
 
@@ -41,7 +39,19 @@ CREATE TABLE `author` (
 INSERT INTO `author` (`id`, `name`) VALUES
 (7, 'George Orwell'),
 (8, 'Jane Austen'),
-(9, 'Alexandre Dumas');
+(9, 'Alexandre Dumas'),
+(10, 'sadas'),
+(11, 'Ray Bradbury'),
+(12, 'lkjljkl'),
+(13, 'SpOngEboB SqUaREpaNtS'),
+(14, 'Funny cat'),
+(15, 'Test'),
+(16, 'Boom'),
+(17, 'HAKA'),
+(18, 'Hmmmm'),
+(19, 'sadasd'),
+(20, 'jk;lsad;jsadj'),
+(21, 'fsadas');
 
 -- --------------------------------------------------------
 
@@ -54,20 +64,33 @@ CREATE TABLE `book` (
   `title` varchar(255) NOT NULL,
   `publisher_id` int(11) DEFAULT NULL,
   `year_published` date DEFAULT NULL,
-  `cover_path` varchar(255) DEFAULT NULL,
-  `available` tinyint(1) DEFAULT 0
+  `cover_name` varchar(255) DEFAULT NULL,
+  `available` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 --
 -- Dumping data for table `book`
 --
 
-INSERT INTO `book` (`id`, `title`, `publisher_id`, `year_published`, `cover_path`, `available`) VALUES
-(82, 'Animal Farm', 21, '2026-11-28', NULL, NULL),
-(83, 'Nineteen Eighty-Four', 21, '2026-11-22', NULL, NULL),
-(84, 'A Clergyman\'s Daughter', 22, '2026-11-12', NULL, NULL),
-(85, 'Pride and Prejudice', 22, '2026-10-30', NULL, NULL),
-(86, 'The Count of Monte Cristo', 23, '2026-11-14', NULL, NULL);
+INSERT INTO `book` (`id`, `title`, `publisher_id`, `year_published`, `cover_name`, `available`) VALUES
+(82, 'Animal Farms', 24, '2026-11-28', 'stronk-1795100339.jpg', 1),
+(83, 'Nineteen Eighty-Four', 23, '2026-11-22', 'default.jpeg', 0),
+(84, 'A Clergyman\'s Daughter', 22, '2026-11-12', 'default.jpeg', 0),
+(85, 'Pride and Prejudice', 22, '2026-10-30', 'images1-1795101836.jpg', 1),
+(86, 'The Count of Monte Cristo', 23, '2026-11-14', 'default.jpeg', 0),
+(87, 'Funny cat', 24, '2026-11-29', 'images-1795090493.jpg', 0),
+(88, 'Fahrenheit 451', 21, '2026-10-28', 'default.jpeg', 0),
+(89, 'mnbm', 22, '2026-11-29', 'default.jpeg', 0),
+(90, 'NEw Book', 22, '2026-11-07', 'images1-1795100422.jpg', 1),
+(91, 'New funny cat book', 26, '2026-11-05', 'default.jpeg', 0),
+(92, 'Testing CoNST', 22, '2026-12-31', 'default.jpeg', 0),
+(93, 'Const test2', 27, '2026-12-31', 'default.jpeg', 1),
+(94, 'TEST 3 Boom', 28, '2026-01-31', 'default.jpeg', 1),
+(95, 'CMON', 29, '2026-01-01', 'default.jpeg', 1),
+(96, 'TEsting image type?', 30, '2026-01-31', 'default.jpeg', 0),
+(97, 'asdas', 31, '0211-01-11', 'default.jpeg', 0),
+(98, 'salkjdsakldj', 32, '1111-11-11', 'default.jpeg', 0),
+(99, 'dsadsa', 33, '1231-12-12', '7rf5z-1795101962.jpg', 0);
 
 -- --------------------------------------------------------
 
@@ -89,7 +112,20 @@ INSERT INTO `book_author` (`book_id`, `author_id`) VALUES
 (83, 7),
 (84, 7),
 (85, 8),
-(86, 9);
+(86, 9),
+(87, 10),
+(88, 11),
+(89, 12),
+(90, 13),
+(91, 14),
+(92, 9),
+(93, 15),
+(94, 16),
+(95, 17),
+(96, 18),
+(97, 19),
+(98, 20),
+(99, 21);
 
 -- --------------------------------------------------------
 
@@ -111,7 +147,20 @@ INSERT INTO `book_genres` (`book_id`, `genres_id`) VALUES
 (83, 1),
 (84, 1),
 (85, 16),
-(86, 13);
+(86, 13),
+(87, 17),
+(88, 20),
+(89, 19),
+(90, 16),
+(91, 2),
+(92, 3),
+(93, 4),
+(94, 1),
+(95, 5),
+(96, 1),
+(97, 1),
+(98, 1),
+(99, 1);
 
 -- --------------------------------------------------------
 
@@ -133,7 +182,20 @@ INSERT INTO `book_languages` (`book_id`, `languages_id`) VALUES
 (83, 1),
 (84, 1),
 (85, 1),
-(86, 1);
+(86, 1),
+(87, 12),
+(88, 12),
+(89, 3),
+(90, 7),
+(91, 3),
+(92, 4),
+(93, 6),
+(94, 1),
+(95, 6),
+(96, 1),
+(97, 1),
+(98, 1),
+(99, 1);
 
 -- --------------------------------------------------------
 
@@ -214,15 +276,7 @@ INSERT INTO `languages` (`id`, `name`) VALUES
 (9, 'Persian'),
 (10, 'Bulgarian'),
 (11, 'Urdu'),
-(12, 'Chinese'),
-(13, 'Dhivehi'),
-(14, 'Dhivehi'),
-(15, 'Dhivehi'),
-(16, 'Dhivehi'),
-(17, 'Dhivehi'),
-(18, 'English'),
-(19, 'English'),
-(20, 'English');
+(12, 'Chinese');
 
 -- --------------------------------------------------------
 
@@ -242,7 +296,17 @@ CREATE TABLE `publisher` (
 INSERT INTO `publisher` (`id`, `name`) VALUES
 (21, 'Penguin'),
 (22, 'WILLY WONKA'),
-(23, 'Dancho');
+(23, 'Dancho'),
+(24, 'asda'),
+(25, ';l\';'),
+(26, 'Koncho'),
+(27, 'OK'),
+(28, '21'),
+(29, 'CAT'),
+(30, 'No'),
+(31, 'fsafasfas'),
+(32, ';alkjdlsajdlak'),
+(33, 'safdsafdsa');
 
 --
 -- Indexes for dumped tables
@@ -308,13 +372,13 @@ ALTER TABLE `publisher`
 -- AUTO_INCREMENT for table `author`
 --
 ALTER TABLE `author`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT for table `book`
 --
 ALTER TABLE `book`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=87;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=100;
 
 --
 -- AUTO_INCREMENT for table `genres`
@@ -332,7 +396,7 @@ ALTER TABLE `languages`
 -- AUTO_INCREMENT for table `publisher`
 --
 ALTER TABLE `publisher`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
 -- Constraints for dumped tables

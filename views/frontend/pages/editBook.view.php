@@ -1,6 +1,6 @@
 <h1>Editing book: </h1>
 
-<form method="POST" action="index.php?<?php echo http_build_query(['page' => 'edit', 'book_id' => e($result->book_id)])?>">
+<form method="POST" action="/edit?<?php echo http_build_query(['book_id' => e($result->book_id)])?>" enctype="multipart/form-data">
 
     <label for="title">Title: </label>
     <input type="text" id="title" name="title" value="<?php echo e($result->book_title);?>"/>
@@ -40,6 +40,10 @@
     <label for="available">Available:</label>
     <input type="checkbox" value="true" name="available" id="available"
            <?php echo $result->book_available ? e("checked") : ""; ?>/>
+
+    <br>
+    <label for="cover">Cover Image</label>
+    <input type="file" id="cover" name="cover"/>
 
     <br>
     <input type="submit" value="Submit">

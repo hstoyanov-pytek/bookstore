@@ -12,6 +12,7 @@ class BookDetailsDTO
     public string $book_genres;
     public string $book_languages;
     public bool $book_available;
+    public string $book_cover_name;
 
     public function arrayToObject(array $values) : BookDetailsDTO
     {
@@ -22,6 +23,7 @@ class BookDetailsDTO
         $this->book_genres = @(string)$values['genre'];
         $this->book_languages = @(string)$values['language'];
         $this->book_available = @(bool)$values['available'];
+        $this->book_cover_name = @(string)$values['cover'];
 
         return $this;
     }

@@ -67,7 +67,32 @@ class BookRepository
 
     public function fetchAll() : array
     {
-        $result = $this->database::$select->select("")->from("book")->orderBy("id")->getResults(BookModel::class);
+        $result = $this->database::$select
+            ->select("
+                book.id as book_id,
+                book.title as book_title,
+                book.year_published as year_published,
+                book.available as book_available,
+                book.cover_name as book_cover_name,
+                publisher.name as publisher,
+                author.name as book_author,
+                genres.name as book_genres,
+                languages.name as book_languages
+            ")
+            ->from("book")
+            ->innerJoin("publisher", "book.publisher_id = publisher.id")
+
+            ->innerJoin("book_author", "book.id = book_author.book_id")
+            ->innerJoin("author", "book_author.author_id = author.id")
+
+            ->innerJoin("book_genres", "book.id = book_genres.book_id")
+            ->innerJoin("genres", "book_genres.genres_id = genres.id")
+
+            ->innerJoin("book_languages", "book.id = book_languages.book_id")
+            ->innerJoin("languages", "book_languages.languages_id = languages.id")
+
+            ->getResults(BookDetailsDTO::class);
+
         return $result;
     }
 
@@ -143,6 +168,7 @@ class BookRepository
                 book.title as book_title,
                 book.year_published as year_published,
                 book.available as book_available,
+                book.cover_name as book_cover_name,
                 publisher.name as publisher,
                 author.name as book_author,
                 genres.name as book_genres,
@@ -190,7 +216,8 @@ class BookRepository
             ['col' => 'title', 'value'=> $detailsDTO->book_title],
             ['col' => 'year_published', 'value' => $detailsDTO->year_published],
             ['col' => 'available', 'value' => (int)$detailsDTO->book_available],
-            ['col' => 'publisher_id', 'value'=>$publisherResult->id]
+            ['col' => 'publisher_id', 'value'=>$publisherResult->id],
+            ['col' => 'cover_name', 'value'=>empty($detailsDTO->book_cover_name) ? BOOK_COVER_DEFAULT : $detailsDTO->book_cover_name]
         );
 
         $this->database::$update
@@ -251,7 +278,10 @@ class BookRepository
         $whereLanguage = $this->database->createParams(cols: ['name'], values: [$language], operators:['=']);
         $languageEntry = $this->getEntry('languages', $whereLanguage, LanguagesModel::class, insertCols: array('name'), insertVals: array($language));
 
-        $this->database::$insert->insertInto("book", ['title', 'publisher_id', 'year_published'])->values(array($title, $publisherEntry->id, $year_published))->exec();
+        $this->database::$insert
+            ->insertInto("book", ['title', 'publisher_id', 'year_published', 'cover_name'])
+            ->values(array($title, $publisherEntry->id, $year_published, empty($cover_name) ? BOOK_COVER_DEFAULT : $cover_name))
+            ->exec();
 
         $bookWhere = $this->database->createParams(cols: ['title', 'publisher_id'], values: [$title, $publisherEntry->id], operators:['=', '=']);
         $book = $this->database::$select->select('id')->from("book")->where($bookWhere)->getResult(BookModel::class);
@@ -261,7 +291,24 @@ class BookRepository
         $this->database::$insert->insertInto("book_languages", ['book_id', 'languages_id'])->values(array($book->id, $languageEntry->id))->exec();
     }
 
-    public function deleteBookEntry(int $id, bool $softDelete = false)
+    public function switchAvailabilityState(int $id)
+    {
+        $whereParams = $this->database->createParams(['id'],[$id],['=']);
+
+        $currentState = $this->database::$select
+            ->select(["available"])
+            ->from("book")
+            ->where($whereParams)
+            ->getResult(BookModel::class);
+
+        $this->database::$update
+            ->update("book")
+            ->set(array(['col' => 'available', 'value'=>(int)!$currentState->available]))
+            ->where($whereParams)
+            ->exec();
+    }
+
+    public function deleteBookEntry(int $id, bool $softDelete = true)
     {
         $whereParams = $this->database->createParams(['id'], [$id], ['=']);
         if($softDelete)
