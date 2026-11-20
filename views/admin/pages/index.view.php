@@ -1,10 +1,3 @@
-<ul>
-<?php foreach($availableResults as $result): ?>
-    <li>
-        <a href="/book?<?php echo http_build_query(['book_id' => $result->id]); ?>"><?php echo e($result->title); ?></a>
-    </li>
-<?php endforeach; ?>
-</ul>
 <a href="/create">Create entry</a>
 <table>
     <tr>

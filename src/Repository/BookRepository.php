@@ -125,7 +125,6 @@ class BookRepository
         return $results;
     }
 
-
     public function fetchAll() : array
     {
         $result = $this->database::$select
@@ -166,6 +165,44 @@ class BookRepository
             ->from("book")
             ->where($whereAvailable)
             ->getResults(BookModel::class);
+    }
+
+    public function fetchAvailableByPage(int $page, int $amountResults) : array
+    {
+        $whereAvailable = $this->database->createParams(cols: ['available'], values:['1'], operators:['=']);
+
+        $limit = $amountResults;
+        $offset = ($page - 1) * $limit;
+
+        $results = $this->database::$select
+            ->select("
+                book.id as book_id,
+                book.title as book_title,
+                book.year_published as year_published,
+                book.available as book_available,
+                book.cover_name as book_cover_name,
+                publisher.name as publisher,
+                author.name as book_author,
+                genres.name as book_genres,
+                languages.name as book_languages
+            ")
+            ->from("book")
+            ->innerJoin("publisher", "book.publisher_id = publisher.id")
+
+            ->innerJoin("book_author", "book.id = book_author.book_id")
+            ->innerJoin("author", "book_author.author_id = author.id")
+
+            ->innerJoin("book_genres", "book.id = book_genres.book_id")
+            ->innerJoin("genres", "book_genres.genres_id = genres.id")
+
+            ->innerJoin("book_languages", "book.id = book_languages.book_id")
+            ->innerJoin("languages", "book_languages.languages_id = languages.id")
+            ->where($whereAvailable)
+            ->orderBy(['book.id'])
+            ->limit($limit, $offset)
+            ->getResults(BookDetailsDTO::class);
+
+        return $results;
     }
 
     public function fetchBookByName(string $title) : null|BookDetailsDTO

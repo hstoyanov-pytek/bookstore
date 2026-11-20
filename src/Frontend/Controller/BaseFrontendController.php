@@ -4,13 +4,19 @@ namespace App\Frontend\Controller;
 
 class BaseFrontendController extends \App\Utilities\BaseController
 {
-    protected function render(string $view, array $params) : void
+    public function __construct(\App\Repository\BookRepository $repository)
+    {
+        parent::__construct($repository);
+    }
+
+    #[\Override]
+    protected function render(string $view, array $params = array()) : void
     {
         extract($params);
 
         ob_start();
         require_once __DIR__ . '/../../../views/frontend/' . $view . '.view.php';
-        $displayLoginNav = parent::DisplayLoginNav();
+        $displayLoginNav = parent::displayLoginNav();
         $contents = ob_get_clean();
 
         require_once __DIR__ . '/../../../views/frontend/layouts/main.view.php';

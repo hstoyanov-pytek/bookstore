@@ -3,22 +3,22 @@
     <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" type="text/css" href="./styles/simple.css" />
-    <link rel="stylesheet" type="text/css" href="./styles/custom.css" />
-    <title>CMS Project</title>
+    <link rel="stylesheet" type="text/css" href="../styles/simple.css" />
+    <link rel="stylesheet" type="text/css" href="../styles/custom.css" />
+    <title>Bookstore Admin Panel</title>
     </head>
     <body>
         <header>
-        <h1> <a href="/">Pytek Bookstore</a> </h1>
+        <h1> <a href="/admin">Pytek Bookstore</a> </h1>
             <p>Local bookstore</p>
             <nav>
-                <a href="/">Home</a>
-                <a href="/authors">Authors</a>
-                <a href="/genres">Genres</a>
-                <a href="/languages">Languages</a>
-                <a href="/publishers">Publishers</a>
+                <a href="/admin">Home</a>
+                <a href="/admin/authors">Authors</a>
+                <a href="/admin/genres">Genres</a>
+                <a href="/admin/languages">Languages</a>
+                <a href="/admin/publishers">Publishers</a>
             </nav>
-
+            <a href="/logout">Logout</a>
         </header>
             <main>
                 <?php echo $contents; ?>

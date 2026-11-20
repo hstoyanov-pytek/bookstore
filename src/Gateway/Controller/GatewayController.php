@@ -79,7 +79,6 @@ class GatewayController extends BaseGatewayController
             }
         }
 
-
         $this->render("register", [
             'errors' => $errors
         ]);

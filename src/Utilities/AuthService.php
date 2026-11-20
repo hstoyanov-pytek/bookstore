@@ -15,8 +15,6 @@ class AuthService
     {
         if(empty($email) || empty($password)) return false;
 
-
-
         $whereParams = $this->database->createParams(cols: ['users.email'], alias:["usersEmail"], values: [$email], operators: ['=']);
 
         $existingUser = $this->database::$select
