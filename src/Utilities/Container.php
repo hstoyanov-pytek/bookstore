@@ -7,7 +7,7 @@ class Container
     private array $instances = array();
     private array $bindings = array();
 
-    public function bind(string $what, \Closure $binding)
+    public function bind(string $what, \Closure $binding) : void
     {
         $this->bindings[$what] = $binding;
     }

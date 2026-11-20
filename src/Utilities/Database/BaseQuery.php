@@ -31,7 +31,7 @@ abstract class BaseQuery
     /// Only one operator can be applied for a query, if NOT is selected, then it will be applied at the beginning of the query
     /// and the operator will be ignored and, AND will be applied instead
     ///
-    public function where(string|array $condition, WhereOp $operator = WhereOp::AND)
+    public function where(string|array $condition, WhereOp $operator = WhereOp::AND) : object
     {
         $this->queryString .= " WHERE ";
 
@@ -112,7 +112,7 @@ abstract class BaseQuery
         return $stmt->fetchAll(PDO::FETCH_CLASS, $modelClass);
     }
 
-    public function getResult(string $modelClass = "") : null|object|array
+    public function getResult(string $modelClass = "") : null|object
     {
         $stmt = $this->pdo->prepare($this->queryString);
 
@@ -172,7 +172,7 @@ abstract class BaseQuery
         $this->clearProperties();
     }
 
-    public function from(string $table)
+    public function from(string $table) : object
     {
         if(empty($table))
         {
@@ -183,7 +183,7 @@ abstract class BaseQuery
         return $this;
     }
 
-    protected function createBinds(string $column, string $value)
+    protected function createBinds(string $column, string $value) : void
     {
         $type = PDO::PARAM_STR;
         if(is_numeric($value))
@@ -199,7 +199,7 @@ abstract class BaseQuery
         ];
     }
 
-    private function clearProperties()
+    private function clearProperties() : void
     {
         $this->queryString = "";
         $this->binds = array();

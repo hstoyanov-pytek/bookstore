@@ -3,17 +3,17 @@
 namespace App\Frontend\Controller;
 use \App\Model\BookDetailsDTO;
 
-class PagesController extends BaseController
+class PagesController extends BaseFrontendController
 {
     public function __construct(
         protected \App\Repository\BookRepository $repository
     ){}
 
-    private function displayPage(string $pageKey, array $params = array())
+    private function displayPage(string $pageKey, array $params = array()) : void
     {
         $this->render('pages/'. $pageKey, $params);
     }
-    private function displayNavigation(string $pageKey, array $params = array())
+    private function displayNavigation(string $pageKey, array $params = array()) : void
     {
         $this->render('navigation/'. $pageKey, $params);
     }
@@ -63,9 +63,13 @@ class PagesController extends BaseController
         return $imageName;
     }
 
-    public function displayLandingPage()
+    public function displayLandingPage() : void
     {
-        $results = $this->repository->fetchAll();
+        // $page = @(int)($_GET['page']) ?? 1; // This returns 0 when $_GET is null. Null cast to int = 0
+        $page = empty($_GET['page']) ? 1 : @(int)($_GET['page']);
+
+        $results = $this->repository->fetchByPage($page, RESULTS_DISPLAYED_ON_PAGE);
+//        $results = $this->repository->fetchAll();
         $availableResults = $this->repository->fetchAllAvailable();
 
         if(empty($results))
@@ -74,12 +78,13 @@ class PagesController extends BaseController
         }
 
         $this->displayPage("index", [
+            'page' => $page,
             'results' => $results,
             'availableResults' => $availableResults
         ]);
     }
 
-    public function displayBookPage()
+    public function displayBookPage() : void
     {
         $id = @(int)($_GET['book_id'] ?? 1);
         $result = $this->repository->fetchBookById($id);
@@ -95,7 +100,7 @@ class PagesController extends BaseController
         ]);
     }
 
-    public function editBookEntry()
+    public function editBookEntry() : void
     {
         $id = @(int)($_GET['book_id'] ?? 1);
         if(!empty($_POST))
@@ -141,7 +146,7 @@ class PagesController extends BaseController
         ]);
     }
 
-    public function createBookEntry()
+    public function createBookEntry() : void
     {
         if(!empty($_POST))
         {
@@ -169,7 +174,7 @@ class PagesController extends BaseController
         ]);
     }
 
-    public function deleteBookEntryById()
+    public function deleteBookEntryById() : void
     {
         $id = @(int)($_POST['id']);
         if(!empty($id))
@@ -180,7 +185,7 @@ class PagesController extends BaseController
         header("Location: /");
     }
 
-    public function displayAllAuthors()
+    public function displayAllAuthors() : void
     {
         $authors = $this->repository->fetchAllAuthors();
         $this->displayNavigation("authors", [
@@ -188,7 +193,7 @@ class PagesController extends BaseController
         ]);
     }
 
-    public function displayAllGenres()
+    public function displayAllGenres() : void
     {
         $genres = $this->repository->fetchAllGenres();
 
@@ -197,7 +202,7 @@ class PagesController extends BaseController
         ]);
     }
 
-    public function displayAllLanguages()
+    public function displayAllLanguages() : void
     {
         $languages = $this->repository->fetchAllLanguages();
         $this->displayNavigation("languages", [
@@ -205,7 +210,7 @@ class PagesController extends BaseController
         ]);
     }
 
-    public function displayAllPublishers()
+    public function displayAllPublishers() : void
     {
         $publishers = $this->repository->fetchAllPublishers();
         $this->displayNavigation("publishers", [

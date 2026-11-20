@@ -37,3 +37,7 @@
     </tr>
 <?php endforeach; ?>
 </table>
+<?php if($page > 1) : ?>
+    <a href="?<?php echo http_build_query(['page'=> max(1, $page - 1)]) ?>">Previous</a>
+<?php endif;?>
+    <a href="?<?php echo http_build_query(['page'=> $page + 1]) ?>">Next</a>

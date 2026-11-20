@@ -15,7 +15,7 @@ class Router
         $path = preg_replace('#/{2,}#' , '/', $path);
     }
 
-    public function add(string $method, string $path, array $controller)
+    public function add(string $method, string $path, array $controller) : void
     {
         $this->normalizePath($path);
         $this->routes[] = array(
@@ -25,7 +25,7 @@ class Router
         );
     }
 
-    public function dispatch(string $path)
+    public function dispatch(string $path) : void
     {
         $this->normalizePath($path);
         $method = strtoupper($_SERVER['REQUEST_METHOD']);
@@ -39,10 +39,16 @@ class Router
 
             [$controller, $function] = $route['controller'];
 
-            if($controller instanceof \App\Frontend\Controller\BaseController)
+            if(    $controller instanceof \App\Frontend\Controller\BaseFrontendController
+                || $controller instanceof \App\Gateway\Controller\BaseGatewayController
+                || $controller instanceof \App\Admin\Controller\BaseAdminController)
+            {
                 $controller->{$function}();
+            }
             else
-                throw new \Exception("{$controller} is not an instance of FRONTEND BASE CONTROLLER");
+            {
+                throw new \Exception("{$controller} is not an instance of a BASE CONTROLLER");
+            }
         }
     }
 }

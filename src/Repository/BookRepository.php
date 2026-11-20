@@ -16,7 +16,7 @@ class BookRepository
 
 
     private function updateTable(string $selectColumn, $selectValue, string $selectTableName, string $selectModelClass,
-                                 string $whereUpdateColumn, $whereUpdateValue, string $updateTable, string $updateColumn)
+                                 string $whereUpdateColumn, $whereUpdateValue, string $updateTable, string $updateColumn) : void
     {
 /// Templatised version of:
 //        $whereLanguage = $this->database->createParams(cols:['name'], values:[$detailsDTO->book_languages], operators:['=']);
@@ -65,6 +65,67 @@ class BookRepository
         return $foundEntry;
     }
 
+    public function fetchByPage(int $page, int $amountResults) : array
+    {
+//        /SELECT
+//        book.id as book_id,
+//        book.title as book_title,
+//        book.year_published as year_published,
+//        book.available as book_available,
+//        book.cover_name as book_cover_name,
+//        publisher.name as publisher,
+//        author.name as book_author,
+//        genres.name as book_genres,
+//        languages.name as book_languages
+//
+//        FROM book
+//        INNER JOIN publisher ON book.publisher_id = publisher.id
+//
+//        INNER JOIN book_author ON book.id = book_author.book_id
+//        INNER JOIN author ON book_author.author_id = author.id
+//
+//        INNER JOIN book_genres ON book.id = book_genres.book_id
+//        INNER JOIN genres ON book_genres.genres_id = genres.id
+//
+//        INNER JOIN book_languages ON book.id = book_languages.book_id
+//        INNER JOIN languages ON book_languages.languages_id = languages.id
+//        ORDER BY book.id
+//        LIMIT 5 OFFSET 0;
+
+        $limit = $amountResults;
+        $offset = ($page - 1) * $limit;
+
+        $results = $this->database::$select
+            ->select("
+                book.id as book_id,
+                book.title as book_title,
+                book.year_published as year_published,
+                book.available as book_available,
+                book.cover_name as book_cover_name,
+                publisher.name as publisher,
+                author.name as book_author,
+                genres.name as book_genres,
+                languages.name as book_languages
+            ")
+            ->from("book")
+            ->innerJoin("publisher", "book.publisher_id = publisher.id")
+
+            ->innerJoin("book_author", "book.id = book_author.book_id")
+            ->innerJoin("author", "book_author.author_id = author.id")
+
+            ->innerJoin("book_genres", "book.id = book_genres.book_id")
+            ->innerJoin("genres", "book_genres.genres_id = genres.id")
+
+            ->innerJoin("book_languages", "book.id = book_languages.book_id")
+            ->innerJoin("languages", "book_languages.languages_id = languages.id")
+            ->orderBy(['book.id'])
+            ->limit($limit, $offset)
+            ->getResults(BookDetailsDTO::class);
+
+        return $results;
+    }
+
+
     public function fetchAll() : array
     {
         $result = $this->database::$select
@@ -90,7 +151,7 @@ class BookRepository
 
             ->innerJoin("book_languages", "book.id = book_languages.book_id")
             ->innerJoin("languages", "book_languages.languages_id = languages.id")
-
+            ->orderBy(['book.id'])
             ->getResults(BookDetailsDTO::class);
 
         return $result;
@@ -107,7 +168,7 @@ class BookRepository
             ->getResults(BookModel::class);
     }
 
-    public function fetchBookByName(string $title) : null|array|BookDetailsDTO
+    public function fetchBookByName(string $title) : null|BookDetailsDTO
     {
         $whereBook = $this->database->createParams(cols:['book.title'], alias:['bookTitle'], values:[$title], operators:["="]);
 
@@ -140,7 +201,7 @@ class BookRepository
         return $result;
     }
 
-    public function fetchBookById(int $id) : null|array|BookDetailsDTO
+    public function fetchBookById(int $id) : null|BookDetailsDTO
     {
         $whereBook = $this->database->createParams(cols: ['book.id'], alias:['book_id'], values:[$id], operators:['=']);
 //        SELECT book.title as book_title,
@@ -198,7 +259,7 @@ class BookRepository
         return null;
     }
 
-    public function updateById(int $id, BookDetailsDTO $detailsDTO)
+    public function updateById(int $id, BookDetailsDTO $detailsDTO) : void
     {
         $whereBookUpdate = $this->database->createParams(cols: ['id'], values:[$id], operators:['=']);
 
@@ -262,7 +323,7 @@ class BookRepository
 
     }
 
-    public function createEntry(array $newData)
+    public function createEntry(array $newData) : void
     {
         extract($newData);
 
@@ -291,7 +352,7 @@ class BookRepository
         $this->database::$insert->insertInto("book_languages", ['book_id', 'languages_id'])->values(array($book->id, $languageEntry->id))->exec();
     }
 
-    public function switchAvailabilityState(int $id)
+    public function switchAvailabilityState(int $id) : void
     {
         $whereParams = $this->database->createParams(['id'],[$id],['=']);
 
@@ -308,7 +369,7 @@ class BookRepository
             ->exec();
     }
 
-    public function deleteBookEntry(int $id, bool $softDelete = true)
+    public function deleteBookEntry(int $id, bool $softDelete = true) : void
     {
         $whereParams = $this->database->createParams(['id'], [$id], ['=']);
         if($softDelete)

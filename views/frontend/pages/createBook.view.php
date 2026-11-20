@@ -32,6 +32,9 @@
     <label for="cover">Cover Image</label>
     <input type="file" id="cover" name="cover"/>
 
+    <label for="available">Available:</label>
+    <input type="checkbox" value="true" name="available" id="available"/>
+
     <br>
     <input type="submit">
 </form>

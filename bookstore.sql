@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Nov 19, 2026 at 03:28 PM
+-- Generation Time: Nov 20, 2026 at 12:46 PM
 -- Server version: 11.8.6-MariaDB-0+deb13u1 from Debian
 -- PHP Version: 8.4.27
 
@@ -51,7 +51,8 @@ INSERT INTO `author` (`id`, `name`) VALUES
 (18, 'Hmmmm'),
 (19, 'sadasd'),
 (20, 'jk;lsad;jsadj'),
-(21, 'fsadas');
+(21, 'fsadas'),
+(22, 'Author');
 
 -- --------------------------------------------------------
 
@@ -90,7 +91,8 @@ INSERT INTO `book` (`id`, `title`, `publisher_id`, `year_published`, `cover_name
 (96, 'TEsting image type?', 30, '2026-01-31', 'default.jpeg', 0),
 (97, 'asdas', 31, '0211-01-11', 'default.jpeg', 0),
 (98, 'salkjdsakldj', 32, '1111-11-11', 'default.jpeg', 0),
-(99, 'dsadsa', 33, '1231-12-12', '7rf5z-1795101962.jpg', 0);
+(99, 'dsadsa', 33, '1231-12-12', '7rf5z-1795101962.jpg', 0),
+(100, 'Cool Book #2', 34, '2026-01-01', 'photo20261031193854-1795155610.jpg', 1);
 
 -- --------------------------------------------------------
 
@@ -125,7 +127,8 @@ INSERT INTO `book_author` (`book_id`, `author_id`) VALUES
 (96, 18),
 (97, 19),
 (98, 20),
-(99, 21);
+(99, 21),
+(100, 22);
 
 -- --------------------------------------------------------
 
@@ -160,7 +163,8 @@ INSERT INTO `book_genres` (`book_id`, `genres_id`) VALUES
 (96, 1),
 (97, 1),
 (98, 1),
-(99, 1);
+(99, 1),
+(100, 16);
 
 -- --------------------------------------------------------
 
@@ -195,7 +199,8 @@ INSERT INTO `book_languages` (`book_id`, `languages_id`) VALUES
 (96, 1),
 (97, 1),
 (98, 1),
-(99, 1);
+(99, 1),
+(100, 8);
 
 -- --------------------------------------------------------
 
@@ -306,7 +311,68 @@ INSERT INTO `publisher` (`id`, `name`) VALUES
 (30, 'No'),
 (31, 'fsafasfas'),
 (32, ';alkjdlsajdlak'),
-(33, 'safdsafdsa');
+(33, 'safdsafdsa'),
+(34, 'Goofy ahh uncle production');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `roles`
+--
+
+CREATE TABLE `roles` (
+  `id` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `roles`
+--
+
+INSERT INTO `roles` (`id`, `name`) VALUES
+(1, 'admin'),
+(2, 'user'),
+(3, 'editor');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `users`
+--
+
+CREATE TABLE `users` (
+  `id` int(11) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `name` varchar(255) DEFAULT NULL,
+  `password` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `users`
+--
+
+INSERT INTO `users` (`id`, `email`, `name`, `password`) VALUES
+(1, 'admin@pytek.bg', 'Hristo', '$2y$10$Yw5IommDjhCYwatdCVVevuiCUfL3afol4Mck36tqDeH2iKHpWPC2m'),
+(4, 'kim@bookstore.com', 'Kimberly', '$2y$12$qz7i0hk9mc7rjwNREZIGeub0BWdEehmBwmRvt13.TBAoKmaz1uqd.');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `users_roles`
+--
+
+CREATE TABLE `users_roles` (
+  `users_id` int(11) DEFAULT NULL,
+  `roles_id` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `users_roles`
+--
+
+INSERT INTO `users_roles` (`users_id`, `roles_id`) VALUES
+(1, 1),
+(4, 2);
 
 --
 -- Indexes for dumped tables
@@ -365,6 +431,25 @@ ALTER TABLE `publisher`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `roles`
+--
+ALTER TABLE `roles`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `users`
+--
+ALTER TABLE `users`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `users_roles`
+--
+ALTER TABLE `users_roles`
+  ADD KEY `roles_id` (`roles_id`),
+  ADD KEY `users_id` (`users_id`) USING BTREE;
+
+--
 -- AUTO_INCREMENT for dumped tables
 --
 
@@ -372,13 +457,13 @@ ALTER TABLE `publisher`
 -- AUTO_INCREMENT for table `author`
 --
 ALTER TABLE `author`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT for table `book`
 --
 ALTER TABLE `book`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=100;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=101;
 
 --
 -- AUTO_INCREMENT for table `genres`
@@ -396,7 +481,19 @@ ALTER TABLE `languages`
 -- AUTO_INCREMENT for table `publisher`
 --
 ALTER TABLE `publisher`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
+
+--
+-- AUTO_INCREMENT for table `roles`
+--
+ALTER TABLE `roles`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `users`
+--
+ALTER TABLE `users`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- Constraints for dumped tables
@@ -428,6 +525,13 @@ ALTER TABLE `book_genres`
 ALTER TABLE `book_languages`
   ADD CONSTRAINT `book_languages_ibfk_1` FOREIGN KEY (`book_id`) REFERENCES `book` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `book_languages_ibfk_2` FOREIGN KEY (`languages_id`) REFERENCES `languages` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `users_roles`
+--
+ALTER TABLE `users_roles`
+  ADD CONSTRAINT `users_roles_ibfk_1` FOREIGN KEY (`users_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `users_roles_ibfk_2` FOREIGN KEY (`roles_id`) REFERENCES `roles` (`id`) ON DELETE SET NULL;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

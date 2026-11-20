@@ -9,7 +9,7 @@ class Delete extends BaseQuery
         parent::__construct($pdo);
     }
 
-    public function delete()
+    public function delete() : object
     {
         $this->queryString = "DELETE ";
         return $this;

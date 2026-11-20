@@ -9,7 +9,7 @@ class Update extends BaseQuery
         parent::__construct($pdo);
     }
 
-    public function update(string $table)
+    public function update(string $table) : object
     {
         $this->queryString = "UPDATE ";
         if(!is_string($table))
@@ -30,7 +30,7 @@ class Update extends BaseQuery
     ///     'value => 'value'
     /// ]
     ///
-    public function set(array $columns)
+    public function set(array $columns) : object
     {
         $this->queryString .= " SET ";
 
@@ -57,10 +57,5 @@ class Update extends BaseQuery
         }
 
         return $this;
-    }
-
-    public function ignore()
-    {
-
     }
 }

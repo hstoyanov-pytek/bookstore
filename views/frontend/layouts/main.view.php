@@ -19,6 +19,12 @@
                 <a href="/publishers">Publishers</a>
             </nav>
 
+            <?php if($displayLoginNav):?>
+                <a href="/login">Login</a>
+                <a href="/register">Register</a>
+            <?php else: ?>
+                <a href="/logout">Logout</a>
+            <?php endif; ?>
         </header>
             <main>
                 <?php echo $contents; ?>

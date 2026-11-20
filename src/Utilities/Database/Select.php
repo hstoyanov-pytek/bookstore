@@ -12,7 +12,7 @@ class Select extends BaseQuery
     /// $columns = single dimension array/ string of columns desired
     /// string => "col1, col2, col3...";
     /// array => ["col1", "col2", "col3"...];
-    public function select(array|string $columns, bool $distinct = false)
+    public function select(array|string $columns, bool $distinct = false) : object
     {
         $this->queryString .= "SELECT ";
 
@@ -53,7 +53,7 @@ class Select extends BaseQuery
     /// ASC_DESC_ORDER default value is empty array. Do not pass an array if you're handling the columns through string.
     /// But add the desired ASC_DESC order in the string!
     ///
-    public function orderBy(string|array $cols, array $ASC_DESC_ORDER = array())
+    public function orderBy(string|array $cols, array $ASC_DESC_ORDER = array()) : object
     {
         $this->queryString .= " ORDER BY ";
 
@@ -81,7 +81,7 @@ class Select extends BaseQuery
     //    'value' => 'table2.col',
     //    'operators' => '=']
     /// ;
-    public function innerJoin(string $column, array|string $condition)
+    public function innerJoin(string $column, array|string $condition) : object
     {
         $this->queryString .= " INNER JOIN ";
 
@@ -117,7 +117,7 @@ class Select extends BaseQuery
         return $this;
     }
 
-    public function groupBy(array|string $columns)
+    public function groupBy(array|string $columns) : object
     {
         $this->queryString .= " GROUP BY ";
 
@@ -136,6 +136,16 @@ class Select extends BaseQuery
         {
             $this->queryString .= ($i !== array_key_last($columns)) ? "{$value}, " : "{$value}";
         }
+
+        return $this;
+    }
+
+    public function limit(int $limit, int $offset = 0) : object
+    {
+        $this->queryString .= " LIMIT :limit OFFSET :offset";
+
+        $this->createBinds("limit", $limit);
+        $this->createBinds("offset", $offset);
 
         return $this;
     }

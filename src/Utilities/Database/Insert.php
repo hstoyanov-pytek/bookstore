@@ -12,7 +12,7 @@ class Insert extends BaseQuery
         parent::__construct($pdo);
     }
 
-    public function insertInto(string $table, array|string $columns, )
+    public function insertInto(string $table, array|string $columns) : object
     {
         $this->queryString .= "INSERT INTO ";
 
@@ -51,10 +51,9 @@ class Insert extends BaseQuery
     }
 
     ///
-    /// $values => array(array())
-    /// When passing values to for the insert query, make sure you wrap them in an array()!
+    /// $values => array()
     ///
-    public function values(string|array $values)
+    public function values(string|array $values) : object
     {
         $this->queryString .= " VALUES ";
 
@@ -70,18 +69,18 @@ class Insert extends BaseQuery
         }
         $this->queryString .= ") ";
 
-        /// TODO BINDINGS!!!
-        if(is_string($values))
-        {
-            $this->valueArgs = count(explode(",", $values));
-            if($this->columnArgs !== $this->valueArgs)
-            {
-                throw new \Exception("Number of columns and values mismatch when calling INSERT::VALUES");
-            }
-
-            $this->queryString .= "({$values})";
-            return $this;
-        }
+//        /// TODO BINDINGS!!!
+//        if(is_string($values))
+//        {
+//            $this->valueArgs = count(explode(",", $values));
+//            if($this->columnArgs !== $this->valueArgs)
+//            {
+//                throw new \Exception("Number of columns and values mismatch when calling INSERT::VALUES");
+//            }
+//
+//            $this->queryString .= "({$values})";
+//            return $this;
+//        }
 
         if(is_array($values))
         {
