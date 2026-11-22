@@ -1,12 +1,14 @@
 <?php
 
 namespace App\Admin\Controller;
+use \App\Utilities\AuthService;
 
 class AdminController extends BaseAdminController
 {
-    public function __construct(\App\Repository\BookRepository $repository)
+    public function __construct(\App\Repository\BookRepository $repository,
+                                \App\Utilities\AuthService $authService)
     {
-        parent::__construct($repository);
+        parent::__construct($repository, $authService);
     }
 
     private function validateUploadedImage() : string
@@ -52,6 +54,22 @@ class AdminController extends BaseAdminController
         }
 
         return $imageName;
+    }
+
+    public function displayAllAuthors() : void
+    {
+        $author = @(string)($_GET['author']) ?? "";
+        if(!empty($author))
+        {
+            $results = $this->repository->fetchBooksByAuthor($author);
+
+            $this->render("../templates/authorsTable", [
+                'author' => $author,
+                'results' => $results
+            ]);
+        }
+
+        parent::displayAllAuthors();
     }
 
     public function displayAdminDashboard()

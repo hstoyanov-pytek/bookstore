@@ -7,27 +7,18 @@ use \App\Utilities\AuthService;
 abstract class BaseController
 {
     public function __construct(
-        protected \App\Repository\BookRepository $repository
+        protected \App\Repository\BookRepository $repository,
+        protected AuthService $authService
     ){}
 
-    public static function displayLoginNav() : bool
+    public function displayLoginNav() : bool
     {
-        AuthService::ensureSessionUnique();
-        if(!empty($_SESSION['userId']))
+        if($this->authService->isLoggedIn())
         {
             return false;
         }
 
         return true;
-    }
-
-    public function hasAuthority(string $role) : bool
-    {
-       AuthService::ensureSessionUnique();
-       if(!empty($_SESSION['role']) && $_SESSION['role'] === $role)
-           return true;
-
-       return false;
     }
 
     abstract protected function render(string $view, array $params = array()): void;

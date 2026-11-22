@@ -5,15 +5,14 @@ use \App\Model\BookDetailsDTO;
 
 class PagesController extends BaseFrontendController
 {
-    public function __construct(\App\Repository\BookRepository $repository)
+    public function __construct(\App\Repository\BookRepository $repository,
+                                \App\Utilities\AuthService $authService)
     {
-        parent::__construct($repository);
+        parent::__construct($repository, $authService);
     }
 
     public function displayLandingPage() : void
     {
-        // $page = @(int)($_GET['page']) ?? 1; // This returns 0 when $_GET is null. Null cast to int = 0
-
         $page = empty($_GET['page']) ? 1 : @(int)($_GET['page']);
         $results = $this->repository->fetchAvailableByPage($page, RESULTS_DISPLAYED_ON_PAGE);
 

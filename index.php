@@ -12,13 +12,22 @@ $container->bind("pdo", function()
 $container->bind("pagesController", function() use($container)
 {
     $repo = $container->get("bookRepository");
-    return new \App\Frontend\Controller\PagesController($repo);
+    $authService = $container->get("authService");
+    return new \App\Frontend\Controller\PagesController($repo, $authService);
 });
 
 $container->bind("adminController", function() use($container)
 {
     $bookRepository = $container->get("bookRepository");
-    return new \App\Admin\Controller\AdminController($bookRepository);
+    $authService = $container->get("authService");
+    return new \App\Admin\Controller\AdminController($bookRepository, $authService);
+});
+
+$container->bind("editorController", function() use($container)
+{
+    $bookRepository = $container->get("bookRepository");
+    $authService = $container->get("authService");
+    return new \App\Editor\Controller\EditorController($bookRepository, $authService);
 });
 
 $container->bind("gatewayController", function() use($container)
@@ -55,6 +64,7 @@ $container->bind("router", function()
 $pagesController = $container->get("pagesController");
 $gatewayController = $container->get("gatewayController");
 $adminController = $container->get("adminController");
+$editorController = $container->get("editorController");
 $router = $container->get("router");
 
 $router->add("GET", '', [$pagesController, 'displayLandingPage']);
@@ -71,16 +81,33 @@ $router->add("GET", '/register', [$gatewayController, 'register']);
 $router->add("POST", '/register', [$gatewayController, 'register']);
 $router->add("POST", '/login', [$gatewayController, 'login']);
 
-$router->add("GET", '/admin', [$adminController, 'displayAdminDashboard']);
-$router->add("GET", '/admin/edit', [$adminController, 'editBookEntry']);
-$router->add("GET", '/admin/create', [$adminController, 'createBookEntry']);
-$router->add("GET", '/admin/authors', [$adminController, 'displayAllAuthors']);
-$router->add("GET", '/admin/genres', [$adminController, 'displayAllGenres']);
-$router->add("GET", '/admin/languages', [$adminController, 'displayAllLanguages']);
-$router->add("GET", '/admin/publishers', [$adminController, 'displayAllPublishers']);
-$router->add("POST", '/admin/edit', [$adminController, 'editBookEntry']);
-$router->add("POST", '/admin/delete', [$adminController, 'deleteBookEntryById']);
-$router->add("POST", '/admin/create', [$adminController, 'createBookEntry']);
+if($container->get("authService")->isLoggedIn() && $_SESSION['role'] === "admin")
+{
+    $router->add("GET", '/admin', [$adminController, 'displayAdminDashboard']);
+    $router->add("GET", '/admin/edit', [$adminController, 'editBookEntry']);
+    $router->add("GET", '/admin/create', [$adminController, 'createBookEntry']);
+    $router->add("GET", '/admin/authors', [$adminController, 'displayAllAuthors']);
+    $router->add("GET", '/admin/genres', [$adminController, 'displayAllGenres']);
+    $router->add("GET", '/admin/languages', [$adminController, 'displayAllLanguages']);
+    $router->add("GET", '/admin/publishers', [$adminController, 'displayAllPublishers']);
+    $router->add("POST", '/admin/edit', [$adminController, 'editBookEntry']);
+    $router->add("POST", '/admin/delete', [$adminController, 'deleteBookEntryById']);
+    $router->add("POST", '/admin/create', [$adminController, 'createBookEntry']);
+}
+
+if($container->get("authService")->isLoggedIn() && $_SESSION['role'] === "editor")
+{
+    $router->add("GET", '/editor', [$editorController, 'displayEditorDashboard']);
+    $router->add("GET", '/editor/edit', [$editorController, 'editBookEntry']);
+    $router->add("GET", '/editor/create', [$editorController, 'createBookEntry']);
+    $router->add("GET", '/editor/authors', [$editorController, 'displayAllAuthors']);
+    $router->add("GET", '/editor/genres', [$editorController, 'displayAllGenres']);
+    $router->add("GET", '/editor/languages', [$editorController, 'displayAllLanguages']);
+    $router->add("GET", '/editor/publishers', [$editorController, 'displayAllPublishers']);
+    $router->add("POST", '/editor/edit', [$editorController, 'editBookEntry']);
+    $router->add("POST", '/editor/delete', [$editorController, 'deleteBookEntryById']);
+    $router->add("POST", '/editor/create', [$editorController, 'createBookEntry']);
+}
 
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $router->dispatch($path);

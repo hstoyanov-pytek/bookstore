@@ -4,9 +4,10 @@ namespace App\Frontend\Controller;
 
 class BaseFrontendController extends \App\Utilities\BaseController
 {
-    public function __construct(\App\Repository\BookRepository $repository)
+    public function __construct(\App\Repository\BookRepository $repository,
+                                \App\Utilities\AuthService $authService)
     {
-        parent::__construct($repository);
+        parent::__construct($repository, $authService);
     }
 
     #[\Override]

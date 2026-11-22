@@ -5,8 +5,10 @@ namespace App\Gateway\Controller;
 class GatewayController extends BaseGatewayController
 {
     public function __construct(
-        private \App\Utilities\AuthService $authService
-    ){}
+        \App\Utilities\AuthService $authService
+    ){
+        parent::__construct($authService);
+    }
 
     public function login() : void
     {
@@ -15,7 +17,7 @@ class GatewayController extends BaseGatewayController
         if($this->authService->isLoggedIn())
         {
             header("Location: /");
-            die();
+            return;
         }
 
         if (!empty($_POST))
@@ -56,7 +58,7 @@ class GatewayController extends BaseGatewayController
         if($this->authService->isLoggedIn())
         {
             header("Location: /");
-            die();
+            return;
         }
 
         if(!empty($_POST))

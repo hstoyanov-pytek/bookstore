@@ -446,4 +446,30 @@ class BookRepository
     {
         return $this->database::$select->select("name")->from("publisher")->getResults(PublisherModel::class);
     }
+
+    public function fetchBooksByAuthor(string $authorName) : array
+    {
+        $whereAuthor = $this->database->createParams(cols:["name"],values:[$authorName],operators:["="]);
+        $foundAuthor = $this->database::$select
+            ->select("")
+            ->from("author")
+            ->where($whereAuthor)
+            ->getResult(AuthorModel::class);
+
+
+        $whereParams = $this->database->createParams(cols:["author.id"],alias:["authorId"], values:[$foundAuthor->id],operators:["="]);
+        $filteredResults = $this->database::$select
+            ->select("
+                book.id as book_id,
+                book.title as book_title,
+                book.available as book_available
+            ")
+            ->from("book")
+            ->innerJoin("book_author", "book.id = book_author.book_id")
+            ->innerJoin("author", "book_author.author_id = author.id")
+            ->where($whereParams)
+            ->getResults();
+
+        return $filteredResults;
+    }
 }

@@ -69,11 +69,11 @@ class AuthService
         if(empty($isLoggedIn))
         {
             header("Location: /");
-            die();
+            return;
         }
     }
 
-    public static function ensureSessionUnique() : void
+    public function ensureSessionUnique() : void
     {
         if(session_id() === "")
         {
