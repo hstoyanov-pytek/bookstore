@@ -2,6 +2,6 @@
 
 <ul>
     <?php foreach ($publishers as $publisher):?>
-        <li><?php echo e($publisher->name);?></li>
+        <li><a href="/admin/publishers?<?php echo http_build_query(['publisher'=>$publisher->name]);?>"><?php echo e($publisher->name);?></a></li>
     <?php endforeach; ?>
 </ul>

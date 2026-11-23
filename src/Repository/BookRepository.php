@@ -18,20 +18,6 @@ class BookRepository
     private function updateTable(string $selectColumn, $selectValue, string $selectTableName, string $selectModelClass,
                                  string $whereUpdateColumn, $whereUpdateValue, string $updateTable, string $updateColumn) : void
     {
-/// Templatised version of:
-//        $whereLanguage = $this->database->createParams(cols:['name'], values:[$detailsDTO->book_languages], operators:['=']);
-//        $languageResult = $this->database::$select
-//            ->select("id")
-//            ->from("languages")
-//            ->where($whereLanguage)
-//            ->getResult(LanguagesModel::class);
-//
-//        $whereUpdateBook_Languages = $this->database->createParams(cols:['book_id'], values:[$id], operators:['=']);
-//        $this->database::$update
-//            ->update("book_languages")
-//            ->set(array(['col' => 'languages_id', 'value' => (int)$languageResult->id]))
-//            ->where($whereUpdateBook_Languages)
-//            ->exec();
         $whereSelect = $this->database->createParams(cols:[$selectColumn], values:[$selectValue], operators:['=']);
         $selectResult = $this->database::$select
             ->select("id")
@@ -127,32 +113,7 @@ class BookRepository
 
     public function fetchAll() : array
     {
-        $result = $this->database::$select
-            ->select("
-                book.id as book_id,
-                book.title as book_title,
-                book.year_published as year_published,
-                book.available as book_available,
-                book.cover_name as book_cover_name,
-                publisher.name as publisher,
-                author.name as book_author,
-                genres.name as book_genres,
-                languages.name as book_languages
-            ")
-            ->from("book")
-            ->innerJoin("publisher", "book.publisher_id = publisher.id")
-
-            ->innerJoin("book_author", "book.id = book_author.book_id")
-            ->innerJoin("author", "book_author.author_id = author.id")
-
-            ->innerJoin("book_genres", "book.id = book_genres.book_id")
-            ->innerJoin("genres", "book_genres.genres_id = genres.id")
-
-            ->innerJoin("book_languages", "book.id = book_languages.book_id")
-            ->innerJoin("languages", "book_languages.languages_id = languages.id")
-            ->orderBy(['book.id'])
-            ->getResults(BookDetailsDTO::class);
-
+        $result = $this->getBooksWhere([]);
         return $result;
     }
 
@@ -260,34 +221,7 @@ class BookRepository
 //        INNER JOIN book_languages ON book.id = book_languages.book_id
 //        INNER JOIN languages ON book_languages.languages_id = languages.id;
 
-        $result = $this->database::$select
-            ->select("
-                book.id as book_id,
-                book.title as book_title,
-                book.year_published as year_published,
-                book.available as book_available,
-                book.cover_name as book_cover_name,
-                publisher.name as publisher,
-                author.name as book_author,
-                genres.name as book_genres,
-                languages.name as book_languages
-            ")
-            ->from("book")
-            ->innerJoin("publisher", "book.publisher_id = publisher.id")
-
-            ->innerJoin("book_author", "book.id = book_author.book_id")
-            ->innerJoin("author", "book_author.author_id = author.id")
-
-            ->innerJoin("book_genres", "book.id = book_genres.book_id")
-            ->innerJoin("genres", "book_genres.genres_id = genres.id")
-
-            ->innerJoin("book_languages", "book.id = book_languages.book_id")
-            ->innerJoin("languages", "book_languages.languages_id = languages.id")
-
-            ->where($whereBook)
-            ->getResult(BookDetailsDTO::class);
-
-
+        $result = $this->getBookWhere($whereBook);
         if(!empty($result))
         {
             return $result;
@@ -456,20 +390,119 @@ class BookRepository
             ->where($whereAuthor)
             ->getResult(AuthorModel::class);
 
-
         $whereParams = $this->database->createParams(cols:["author.id"],alias:["authorId"], values:[$foundAuthor->id],operators:["="]);
-        $filteredResults = $this->database::$select
+        $filteredResults = $this->getBooksWhere($whereParams);
+
+        return $filteredResults;
+    }
+
+    public function fetchBooksByGenre(string $genre) : array
+    {
+        $whereGenre = $this->database->createParams(cols:["name"], values:[$genre], operators:["="]);
+        $foundGenre = $this->database::$select
+            ->select("")
+            ->from("genres")
+            ->where($whereGenre)
+            ->getResult(GenresModel::class);
+
+        $whereParams = $this->database->createParams(cols:["genres.id"], alias:["genreId"], values:[$foundGenre->id], operators:["="]);
+
+        $filteredResults = $this->getBooksWhere($whereParams);
+
+        return $filteredResults;
+    }
+
+    public function fetchBooksByLanguage(string $language) : array
+    {
+        $whereLanguage = $this->database->createParams(cols:["name"], values:[$language], operators:["="]);
+        $foundLanguage = $this->database::$select
+            ->select("")
+            ->from("languages")
+            ->where($whereLanguage)
+            ->getResult(LanguagesModel::class);
+
+        $whereParams = $this->database->createParams(cols:["language.id"], alias:["languageId"], values:[$foundLanguage->id], operators:["="]);
+
+        $filteredResults = $this->getBooksWhere($whereParams);
+
+        return $filteredResults;
+    }
+
+    public function fetchBooksByPublisher(string $publisher) : array
+    {
+        $wherePublisher = $this->database->createParams(cols:["name"], values:[$publisher], operators:["="]);
+        $foundPublisher = $this->database::$select
+            ->select("")
+            ->from("publishers")
+            ->where($wherePublisher)
+            ->getResult(PublisherModel::class);
+
+        $whereParams = $this->database->createParams(cols:["publisher.id"], alias:["publisherId"], values:[$foundPublisher->id], operators:["="]);
+
+        $filteredResults = $this->getBooksWhere($whereParams);
+
+        return $filteredResults;
+    }
+
+    private function getBookWhere(array $params) : object
+    {
+        $result = $this->database::$select
             ->select("
                 book.id as book_id,
                 book.title as book_title,
-                book.available as book_available
+                book.year_published as year_published,
+                book.available as book_available,
+                book.cover_name as book_cover_name,
+                publisher.name as publisher,
+                author.name as book_author,
+                genres.name as book_genres,
+                languages.name as book_languages
             ")
             ->from("book")
+            ->innerJoin("publisher", "book.publisher_id = publisher.id")
+
             ->innerJoin("book_author", "book.id = book_author.book_id")
             ->innerJoin("author", "book_author.author_id = author.id")
-            ->where($whereParams)
-            ->getResults();
 
-        return $filteredResults;
+            ->innerJoin("book_genres", "book.id = book_genres.book_id")
+            ->innerJoin("genres", "book_genres.genres_id = genres.id")
+
+            ->innerJoin("book_languages", "book.id = book_languages.book_id")
+            ->innerJoin("languages", "book_languages.languages_id = languages.id")
+            ->where($params)
+            ->getResult(BookDetailsDTO::class);
+
+        return $result;
+    }
+
+    private function getBooksWhere(array $params) : array
+    {
+        $results = $this->database::$select
+            ->select("
+                book.id as book_id,
+                book.title as book_title,
+                book.year_published as year_published,
+                book.available as book_available,
+                book.cover_name as book_cover_name,
+                publisher.name as publisher,
+                author.name as book_author,
+                genres.name as book_genres,
+                languages.name as book_languages
+            ")
+            ->from("book")
+            ->innerJoin("publisher", "book.publisher_id = publisher.id")
+
+            ->innerJoin("book_author", "book.id = book_author.book_id")
+            ->innerJoin("author", "book_author.author_id = author.id")
+
+            ->innerJoin("book_genres", "book.id = book_genres.book_id")
+            ->innerJoin("genres", "book_genres.genres_id = genres.id")
+
+            ->innerJoin("book_languages", "book.id = book_languages.book_id")
+            ->innerJoin("languages", "book_languages.languages_id = languages.id")
+            ->where($params)
+            ->getResults(BookDetailsDTO::class);
+
+        return $results;
     }
 }

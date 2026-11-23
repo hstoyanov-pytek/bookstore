@@ -2,6 +2,6 @@
 
 <ul>
     <?php foreach ($languages as $language):?>
-        <li><?php echo e($language->name);?></li>
+        <li><a href="/admin/languages?<?php echo http_build_query(['language' => $language->name]);?>"><?php echo e($language->name);?></a></li>
     <?php endforeach; ?>
 </ul>

@@ -1,6 +1,6 @@
 <h1>Create a book entry: </h1>
 
-<form method="POST" action="/create" enctype="multipart/form-data">
+<form method="POST" action="/admin/create" enctype="multipart/form-data">
 
     <label for="title">Title: </label>
     <input type="text" id="title" name="title" value=""/>

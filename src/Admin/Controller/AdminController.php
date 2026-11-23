@@ -2,6 +2,7 @@
 
 namespace App\Admin\Controller;
 use \App\Utilities\AuthService;
+use \App\Model\BookDetailsDTO;
 
 class AdminController extends BaseAdminController
 {
@@ -58,12 +59,14 @@ class AdminController extends BaseAdminController
 
     public function displayAllAuthors() : void
     {
+        $page = @(int)($_GET['page']) ?? 1;
         $author = @(string)($_GET['author']) ?? "";
         if(!empty($author))
         {
             $results = $this->repository->fetchBooksByAuthor($author);
 
             $this->render("../templates/authorsTable", [
+                'page' => $page,
                 'author' => $author,
                 'results' => $results
             ]);
@@ -72,7 +75,64 @@ class AdminController extends BaseAdminController
         parent::displayAllAuthors();
     }
 
-    public function displayAdminDashboard()
+    public function displayAllGenres() : void
+    {
+        $page = @(int)($_GET['page']) ?? 1;
+        $genre = @(string)($_GET['genre']) ?? "";
+
+        if(!empty($genre))
+        {
+            $results = $this->repository->fetchBooksByGenre($genre);
+
+            $this->render("../templates/genresTable",[
+                'page' => $page,
+                'genre' => $genre,
+                'results' => $results
+            ]);
+        }
+
+        parent::displayAllGenres();
+    }
+
+    public function displayAllLanguages() : void
+    {
+        $page = @(int)($_GET['page']) ?? 1;
+        $language = @(string)($_GET['language']) ?? "";
+
+        if(!empty($language))
+        {
+            $results = $this->repository->fetchBooksByLanguage($language);
+
+            $this->render("../templates/genresTable",[
+                'page' => $page,
+                'language' => $language,
+                'results' => $results
+            ]);
+        }
+
+        parent::displayAllLanguages();
+    }
+
+    public function displayAllPublishers() : void
+    {
+        $page = @(int)($_GET['page']) ?? 1;
+        $publisher = @(string)($_GET['publisher']) ?? "";
+
+        if(!empty($publisher))
+        {
+            $results = $this->repository->fetchBooksByPublisher($publisher);
+
+            $this->render("../templates/genresTable",[
+                'page' => $page,
+                'publisher' => $publisher,
+                'results' => $results
+            ]);
+        }
+
+        parent::displayAllPublishers();
+    }
+
+    public function displayAdminDashboard() : void
     {
         $page = empty($_GET['page']) ? 1 : @(int)($_GET['page']);
 
@@ -90,6 +150,14 @@ class AdminController extends BaseAdminController
         if(!empty($id))
         {
             $this->repository->switchAvailabilityState($id);
+        }
+
+        $lastPage = @$_POST['page'] ?? "";
+        $author = @$_POST['author'] ?? "";
+        if(!empty($lastPage) && !empty($author))
+        {
+            header("location: /admin/authors?" . http_build_query(["author" => $author]));
+            return;
         }
 
         header("Location: /admin");
@@ -145,6 +213,9 @@ class AdminController extends BaseAdminController
             $details->arrayToObject($values);
             $details->book_id = $id;
             $this->repository->updateById($id, $details);
+
+            /// TODO:: Come up with a solution for the header, to redirect to whatever page we came from if we are
+            /// editing from the navigation
             header("Location: /admin");
         }
 
