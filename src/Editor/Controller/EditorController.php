@@ -5,10 +5,10 @@ use \App\Utilities\AuthService;
 
 class EditorController extends BaseEditorController
 {
-    public function __construct(\App\Repository\BookRepository $repository,
+    public function __construct(\App\Repository\BookRepository $bookRepository,
                                 \App\Utilities\AuthService $authService)
     {
-        parent::__construct($repository, $authService);
+        parent::__construct($bookRepository, $authService);
     }
 
     private function validateUploadedImage() : string
@@ -60,7 +60,7 @@ class EditorController extends BaseEditorController
     {
         $page = empty($_GET['page']) ? 1 : @(int)($_GET['page']);
 
-        $results = $this->repository->fetchByPage($page, RESULTS_DISPLAYED_ON_PAGE);
+        $results = $this->bookRepository->fetchByPage($page, RESULTS_DISPLAYED_ON_PAGE);
 
         $this->render("pages/index", [
             'page' => $page,
@@ -73,7 +73,7 @@ class EditorController extends BaseEditorController
         $id = @(int)($_POST['id']);
         if(!empty($id))
         {
-            $this->repository->switchAvailabilityState($id);
+            $this->bookRepository->switchAvailabilityState($id);
         }
 
         header("Location: /editor");
@@ -92,13 +92,13 @@ class EditorController extends BaseEditorController
             }
             $entryArray['cover_name'] = $imageName;
 
-            $this->repository->createEntry($entryArray);
+            $this->bookRepository->createEntry($entryArray);
             header("Location: /editor");
         }
 
-        $authors = $this->repository->fetchAllAuthors();
-        $genres = $this->repository->fetchAllGenres();
-        $languages = $this->repository->fetchAllLanguages();
+        $authors = $this->bookRepository->fetchAllAuthors();
+        $genres = $this->bookRepository->fetchAllGenres();
+        $languages = $this->bookRepository->fetchAllLanguages();
 
         $this->displayPage('createBook', [
             'authors' => $authors,
@@ -128,15 +128,15 @@ class EditorController extends BaseEditorController
             $details = new BookDetailsDTO();
             $details->arrayToObject($values);
             $details->book_id = $id;
-            $this->repository->updateById($id, $details);
+            $this->bookRepository->updateById($id, $details);
             header("Location: /editor");
         }
 
-        $result = $this->repository->fetchBookById($id);
-        $authors = $this->repository->fetchAllAuthors();
-        $genres = $this->repository->fetchAllGenres();
-        $languages = $this->repository->fetchAllLanguages();
-        $publishers = $this->repository->fetchAllPublishers();
+        $result = $this->bookRepository->fetchBookById($id);
+        $authors = $this->bookRepository->fetchAllAuthors();
+        $genres = $this->bookRepository->fetchAllGenres();
+        $languages = $this->bookRepository->fetchAllLanguages();
+        $publishers = $this->bookRepository->fetchAllPublishers();
 
         if(empty($result))
         {

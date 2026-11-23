@@ -202,24 +202,6 @@ class BookRepository
     public function fetchBookById(int $id) : null|BookDetailsDTO
     {
         $whereBook = $this->database->createParams(cols: ['book.id'], alias:['book_id'], values:[$id], operators:['=']);
-//        SELECT book.title as book_title,
-//        publisher.name as publisher,
-//        book.year_published as year_published,
-//        author.name as author,
-//        genres.name as genre,
-//        languages.name as language
-//
-//        FROM book
-//        INNER JOIN publisher ON book.publisher_id = publisher.id
-//
-//        INNER JOIN book_author ON book.id = book_author.book_id
-//        INNER JOIN author ON book_author.author_id = author.id
-//
-//        INNER JOIN book_genres ON book.id = book_genres.book_id
-//        INNER JOIN genres ON book_genres.genres_id = genres.id
-//
-//        INNER JOIN book_languages ON book.id = book_languages.book_id
-//        INNER JOIN languages ON book_languages.languages_id = languages.id;
 
         $result = $this->getBookWhere($whereBook);
         if(!empty($result))
@@ -345,7 +327,7 @@ class BookRepository
         $whereParams = $this->database->createParams(['id'], [$id], ['=']);
         if($softDelete)
         {
-            $this->database::$update
+            $this->databaseF::$update
                 ->update("book")
                 ->set(array(['col' => "available", 'value' => 0]))
                 ->where($whereParams)
@@ -433,7 +415,7 @@ class BookRepository
         $wherePublisher = $this->database->createParams(cols:["name"], values:[$publisher], operators:["="]);
         $foundPublisher = $this->database::$select
             ->select("")
-            ->from("publishers")
+            ->from("publisher")
             ->where($wherePublisher)
             ->getResult(PublisherModel::class);
 

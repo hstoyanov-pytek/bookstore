@@ -7,7 +7,7 @@ use \App\Utilities\AuthService;
 abstract class BaseController
 {
     public function __construct(
-        protected \App\Repository\BookRepository $repository,
+        protected \App\Repository\BookRepository $bookRepository,
         protected AuthService $authService
     ){}
 
@@ -34,7 +34,7 @@ abstract class BaseController
 
     public function displayAllAuthors() : void
     {
-        $authors = $this->repository->fetchAllAuthors();
+        $authors = $this->bookRepository->fetchAllAuthors();
         $this->displayNavigation("authors", [
             'authors' => $authors
         ]);
@@ -42,7 +42,7 @@ abstract class BaseController
 
     public function displayAllGenres() : void
     {
-        $genres = $this->repository->fetchAllGenres();
+        $genres = $this->bookRepository->fetchAllGenres();
 
         $this->displayNavigation("genres", [
             'genres' => $genres
@@ -51,7 +51,7 @@ abstract class BaseController
 
     public function displayAllLanguages() : void
     {
-        $languages = $this->repository->fetchAllLanguages();
+        $languages = $this->bookRepository->fetchAllLanguages();
         $this->displayNavigation("languages", [
             'languages' => $languages
         ]);
@@ -59,7 +59,7 @@ abstract class BaseController
 
     public function displayAllPublishers() : void
     {
-        $publishers = $this->repository->fetchAllPublishers();
+        $publishers = $this->bookRepository->fetchAllPublishers();
         $this->displayNavigation("publishers", [
             'publishers' => $publishers
         ]);

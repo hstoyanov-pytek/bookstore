@@ -1,4 +1,4 @@
-<h1> admin/ Authors: </h1>
+<h1> Authors: </h1>
 
 <ul>
     <?php foreach ($authors as $author):?>

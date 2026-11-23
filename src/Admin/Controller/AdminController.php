@@ -6,10 +6,12 @@ use \App\Model\BookDetailsDTO;
 
 class AdminController extends BaseAdminController
 {
-    public function __construct(\App\Repository\BookRepository $repository,
-                                \App\Utilities\AuthService $authService)
+    public function __construct(
+                               private \App\Repository\UsersRepository $userRepository,
+                               \App\Repository\BookRepository $bookRepository,
+                               \App\Utilities\AuthService $authService)
     {
-        parent::__construct($repository, $authService);
+        parent::__construct($bookRepository, $authService);
     }
 
     private function validateUploadedImage() : string
@@ -63,7 +65,7 @@ class AdminController extends BaseAdminController
         $author = @(string)($_GET['author']) ?? "";
         if(!empty($author))
         {
-            $results = $this->repository->fetchBooksByAuthor($author);
+            $results = $this->bookRepository->fetchBooksByAuthor($author);
 
             $this->render("../templates/authorsTable", [
                 'page' => $page,
@@ -82,7 +84,7 @@ class AdminController extends BaseAdminController
 
         if(!empty($genre))
         {
-            $results = $this->repository->fetchBooksByGenre($genre);
+            $results = $this->bookRepository->fetchBooksByGenre($genre);
 
             $this->render("../templates/genresTable",[
                 'page' => $page,
@@ -101,9 +103,9 @@ class AdminController extends BaseAdminController
 
         if(!empty($language))
         {
-            $results = $this->repository->fetchBooksByLanguage($language);
+            $results = $this->bookRepository->fetchBooksByLanguage($language);
 
-            $this->render("../templates/genresTable",[
+            $this->render("../templates/languagesTable",[
                 'page' => $page,
                 'language' => $language,
                 'results' => $results
@@ -120,9 +122,9 @@ class AdminController extends BaseAdminController
 
         if(!empty($publisher))
         {
-            $results = $this->repository->fetchBooksByPublisher($publisher);
+            $results = $this->bookRepository->fetchBooksByPublisher($publisher);
 
-            $this->render("../templates/genresTable",[
+            $this->render("../templates/publishersTable",[
                 'page' => $page,
                 'publisher' => $publisher,
                 'results' => $results
@@ -136,7 +138,7 @@ class AdminController extends BaseAdminController
     {
         $page = empty($_GET['page']) ? 1 : @(int)($_GET['page']);
 
-        $results = $this->repository->fetchByPage($page, RESULTS_DISPLAYED_ON_PAGE);
+        $results = $this->bookRepository->fetchByPage($page, RESULTS_DISPLAYED_ON_PAGE);
 
         $this->render("pages/index", [
             'page' => $page,
@@ -149,7 +151,7 @@ class AdminController extends BaseAdminController
         $id = @(int)($_POST['id']);
         if(!empty($id))
         {
-            $this->repository->switchAvailabilityState($id);
+            $this->bookRepository->switchAvailabilityState($id);
         }
 
         $lastPage = @$_POST['page'] ?? "";
@@ -176,13 +178,13 @@ class AdminController extends BaseAdminController
             }
             $entryArray['cover_name'] = $imageName;
 
-            $this->repository->createEntry($entryArray);
+            $this->bookRepository->createEntry($entryArray);
             header("Location: /admin");
         }
 
-        $authors = $this->repository->fetchAllAuthors();
-        $genres = $this->repository->fetchAllGenres();
-        $languages = $this->repository->fetchAllLanguages();
+        $authors = $this->bookRepository->fetchAllAuthors();
+        $genres = $this->bookRepository->fetchAllGenres();
+        $languages = $this->bookRepository->fetchAllLanguages();
 
         $this->displayPage('createBook', [
             'authors' => $authors,
@@ -212,18 +214,18 @@ class AdminController extends BaseAdminController
             $details = new BookDetailsDTO();
             $details->arrayToObject($values);
             $details->book_id = $id;
-            $this->repository->updateById($id, $details);
+            $this->bookRepository->updateById($id, $details);
 
             /// TODO:: Come up with a solution for the header, to redirect to whatever page we came from if we are
             /// editing from the navigation
             header("Location: /admin");
         }
 
-        $result = $this->repository->fetchBookById($id);
-        $authors = $this->repository->fetchAllAuthors();
-        $genres = $this->repository->fetchAllGenres();
-        $languages = $this->repository->fetchAllLanguages();
-        $publishers = $this->repository->fetchAllPublishers();
+        $result = $this->bookRepository->fetchBookById($id);
+        $authors = $this->bookRepository->fetchAllAuthors();
+        $genres = $this->bookRepository->fetchAllGenres();
+        $languages = $this->bookRepository->fetchAllLanguages();
+        $publishers = $this->bookRepository->fetchAllPublishers();
 
         if(empty($result))
         {
@@ -240,5 +242,62 @@ class AdminController extends BaseAdminController
         ]);
     }
 
+    public function displayAllUsers() : void
+    {
+        $results = $this->userRepository->fetchAllUsers();
 
+        $this->displayNavigation("users", [
+            'results' => $results
+        ]);
+    }
+    public function deleteUser() : void
+    {
+        if(!empty($_POST))
+        {
+            $id = @(int)($_POST['id']);
+            if(!empty($id))
+            {
+                $this->userRepository->deleteUserById($id);
+
+                header("Location: /admin/users");
+                die();
+            }
+        }
+
+        $results = $this->userRepository->fetchAllUsers();
+
+        $this->displayNavigation("users", [
+            'results' => $results
+        ]);
+    }
+    public function editUser() : void
+    {
+//        var_dump($_POST);
+//        die();
+
+        if(!empty($_POST))
+        {
+            $details = new \App\Model\UserDetailsDTO();
+            $details->arrayToObject($_POST);
+
+            $this->userRepository->editUser($details);
+
+            header("Location: /admin/users");
+        }
+
+        $id = @(int)($_GET['id']);
+        if(empty($id))
+        {
+            header("Location: /admin/users");
+            die();
+        }
+
+        $user = $this->userRepository->getUserById($id);
+        $roles = $this->userRepository->getRoles();
+
+        parent::render("pages/editUser", [
+            'user' => $user,
+            'roles' => $roles
+        ]);
+    }
 }

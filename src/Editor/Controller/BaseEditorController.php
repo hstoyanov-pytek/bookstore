@@ -4,10 +4,10 @@ namespace App\Editor\Controller;
 
 class BaseEditorController extends \App\Utilities\BaseController
 {
-    public function __construct(\App\Repository\BookRepository $repository,
+    public function __construct(\App\Repository\BookRepository $bookRepository,
                                 \App\Utilities\AuthService $authService)
     {
-        parent::__construct($repository, $authService);
+        parent::__construct($bookRepository, $authService);
     }
 
     #[\Override]

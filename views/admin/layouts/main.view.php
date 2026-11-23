@@ -3,8 +3,8 @@
     <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" type="text/css" href="../styles/simple.css" />
-    <link rel="stylesheet" type="text/css" href="../styles/custom.css" />
+    <link rel="stylesheet" type="text/css" href="<?php echo e(PROJECT_ROOT) ?>styles/simple.css" />
+    <link rel="stylesheet" type="text/css" href="<?php echo e(PROJECT_ROOT) ?>styles/custom.css" />
     <title>Bookstore Admin Panel</title>
     </head>
     <body>
@@ -17,6 +17,7 @@
                 <a href="/admin/genres">Genres</a>
                 <a href="/admin/languages">Languages</a>
                 <a href="/admin/publishers">Publishers</a>
+                <a href="/admin/users">Users</a>
             </nav>
             <a href="/logout">Logout</a>
         </header>

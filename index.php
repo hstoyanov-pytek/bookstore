@@ -19,8 +19,10 @@ $container->bind("pagesController", function() use($container)
 $container->bind("adminController", function() use($container)
 {
     $bookRepository = $container->get("bookRepository");
+    $userRepository = $container->get("userRepository");
     $authService = $container->get("authService");
-    return new \App\Admin\Controller\AdminController($bookRepository, $authService);
+
+    return new \App\Admin\Controller\AdminController(bookRepository: $bookRepository, userRepository: $userRepository, authService:$authService);
 });
 
 $container->bind("editorController", function() use($container)
@@ -40,6 +42,12 @@ $container->bind("bookRepository", function() use($container)
 {
     $db = $container->get("database");
     return new \App\Repository\BookRepository($db);
+});
+
+$container->bind("userRepository", function() use($container)
+{
+   $db = $container->get("database");
+   return new \App\Repository\UsersRepository($db);
 });
 
 $container->bind("database", function() use($container)
@@ -90,6 +98,11 @@ if($container->get("authService")->isLoggedIn() && $_SESSION['role'] === "admin"
     $router->add("GET", '/admin/genres', [$adminController, 'displayAllGenres']);
     $router->add("GET", '/admin/languages', [$adminController, 'displayAllLanguages']);
     $router->add("GET", '/admin/publishers', [$adminController, 'displayAllPublishers']);
+    $router->add("GET", '/admin/users', [$adminController, 'displayAllUsers']);
+    $router->add("GET", '/admin/users/edit', [$adminController, 'editUser']);
+
+    $router->add("POST", '/admin/users/edit', [$adminController, 'editUser']);
+    $router->add("POST", '/admin/users/delete', [$adminController, 'deleteUser']);
     $router->add("POST", '/admin/edit', [$adminController, 'editBookEntry']);
     $router->add("POST", '/admin/delete', [$adminController, 'deleteBookEntryById']);
     $router->add("POST", '/admin/create', [$adminController, 'createBookEntry']);
