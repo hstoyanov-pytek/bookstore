@@ -35,14 +35,31 @@ abstract class BaseController
 
     public function displayAllAuthors() : void
     {
-        $authors = $this->bookRepository->fetchAllAuthors();
-        $this->displayNavigation("authors", [
-            'authors' => $authors
-        ]);
+        $author = @(string)($_GET['author']) ?? "";
+        $page = @($_GET['page']) ?? 1;
+        $entriesCount = $this->bookRepository->getAuthorsCount();
+        $totalPages = ceil($entriesCount / RESULTS_DISPLAYED_ON_PAGE);
+
+        if(!empty($author))
+        {
+            $this->displayBooksByAuthor($author, $page, RESULTS_DISPLAYED_ON_PAGE);
+            die();
+        }
+        $paginationArray = StaticHelpers::createPaginationParams($page, $totalPages,
+            [
+                'previousHref' => "/authors?" . http_build_query(['page' => max(1, $page - 1)]),
+                'nextHref' =>  "/authors?" . http_build_query(['page' => min($page + 1, $totalPages)])
+            ]);
+
+        $authors = $this->bookRepository->fetchAllAuthors($page, RESULTS_DISPLAYED_ON_PAGE);
+        $this->displayNavigation("authors", array_merge(
+            $paginationArray,
+            array('authors' => $authors)
+        ));
     }
     public function displayBooksByAuthor(string $author, int $page, int $limit) : void
     {
-        $entriesCount = $this->bookRepository->getAvailableBooksByAuthor($author);
+        $entriesCount = $this->bookRepository->getAvailableBooksCountByAuthor($author);
         $totalPages = ceil($entriesCount / RESULTS_DISPLAYED_ON_PAGE);
         $results = $this->bookRepository->fetchAvailableBooksByAuthor($author, $page, $limit);
 
@@ -76,23 +93,12 @@ abstract class BaseController
         }
 
         $genres = $this->bookRepository->fetchAllGenres($page, RESULTS_DISPLAYED_ON_PAGE);
-        $hrefArray = array();
-//        if(in_array($_SESSION['role'], AUTH_ROLES))
-//        {
-//             $hrefArray = [
-//                'previousHref' => "/". $_SESSION['role'] ."/genres?" . http_build_query(['page' => max(1, $page - 1)]),
-//                'nextHref' =>  "/". $_SESSION['role'] ."/genres?" . http_build_query(['page' => min($page + 1, $totalPages)])
-//            ];
-//        }
-//        else
-//        {
-            $hrefArray = [
-                'previousHref' => "/genres?" . http_build_query(['page' => max(1, $page - 1)]),
-                'nextHref' =>  "/genres?" . http_build_query(['page' => min($page + 1, $totalPages)])
-            ];
-//        }
 
-        $paginationArray = StaticHelpers::createPaginationParams($page, $totalPages, $hrefArray);
+        $paginationArray = StaticHelpers::createPaginationParams($page, $totalPages,
+            [
+            'previousHref' => "/genres?" . http_build_query(['page' => max(1, $page - 1)]),
+            'nextHref' =>  "/genres?" . http_build_query(['page' => min($page + 1, $totalPages)])
+        ]);
         $this->displayNavigation("genres", array_merge(
             $paginationArray,
             array(
@@ -103,9 +109,10 @@ abstract class BaseController
 
     public function displayBooksByGenre(string $genre, int $page, int $limit) : void
     {
-        $entriesCount = $this->bookRepository->getAvailableBooksByGenre($genre);
+        $entriesCount = $this->bookRepository->getAvailableBooksCountByGenre($genre);
         $totalPages = ceil($entriesCount / RESULTS_DISPLAYED_ON_PAGE);
         $results = $this->bookRepository->fetchAvailableBooksByGenre($genre, $page, $limit);
+
         $paginationArray = StaticHelpers::createPaginationParams($page, $totalPages, [
             'previousHref' => "/genres?" . http_build_query(['page' => max(1, $page - 1), 'genre' => $genre]),
             'nextHref' =>  "/genres?" . http_build_query(['page' => min($page + 1, $totalPages), 'genre' => $genre])

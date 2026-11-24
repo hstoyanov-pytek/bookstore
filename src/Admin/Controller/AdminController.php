@@ -91,7 +91,7 @@ class AdminController extends BaseAdminController
 
     public function displayBooksByGenre(string $genre, int $page, int $limit) : void
     {
-        $entriesCount = $this->bookRepository->getAvailableBooksByGenre($genre);
+        $entriesCount = $this->bookRepository->getAvailableBooksCountByGenre($genre);
         $totalPages = ceil($entriesCount / RESULTS_DISPLAYED_ON_PAGE);
 
         $paginationArray = StaticHelpers::createPaginationParams($page, $totalPages, [
