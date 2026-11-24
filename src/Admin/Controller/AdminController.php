@@ -280,7 +280,7 @@ class AdminController extends BaseAdminController
             $details = new \App\Model\UserDetailsDTO();
             $details->arrayToObject($_POST);
 
-            $this->userRepository->editUser($details);
+            $this->userRepository->updateUser($details);
 
             header("Location: /admin/users");
         }

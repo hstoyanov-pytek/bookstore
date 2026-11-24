@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Editor\Controller;
-use \App\Utilities\AuthService;
 
 class EditorController extends BaseEditorController
 {

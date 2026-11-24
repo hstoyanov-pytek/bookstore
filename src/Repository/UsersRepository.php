@@ -63,30 +63,31 @@ class UsersRepository
     ///     'value => 'value'
     /// ]
     ///
-    public function editUser(UserDetailsDTO $details) : void
+    public function updateUser(UserDetailsDTO $details) : void
     {
-        if(empty($details)){ return ;}
-        $whereParams = $this->database->createParams(cols:["id"], values:[$details->user_id], operators:["="]);
-
-        $detailsArray = $details->objectToArray();
-
-        $setParams = array();
-
-        foreach ($detailsArray as $key => $value)
-        {
-            if(!empty($value))
-            {
-                $setParams[] = [
-                    'col' => $key,
-                    'value' => $value
-                ];
-            }
+        if(empty($details)){
+            throw new \Exception("UserDetailsDTO is null");
         }
+        $whereParams = $this->database->createParams(cols:["id"], values:[$details->user_id], operators:["="]);
 
         $this->database::$update
             ->update("users")
-            ->set($setParams)
+            ->set(array(['col' => 'name', 'value' => $details->user_name]))
             ->where($whereParams)
+            ->exec();
+
+        $whereRole = $this->database->createParams(cols: ['name'], values: [$details->user_role], operators: ["="]);
+        $roleFound = $this->database::$select
+            ->select("")
+            ->from("roles")
+            ->where($whereRole)
+            ->getResult(RolesModel::class);
+
+        $whereUsersRoles = $this->database->createParams(cols:['users_id'], values: [$details->user_id], operators: ["="]);
+        $this->database::$update
+            ->update("users_roles")
+            ->set(array(['col' => 'roles_id', 'value' => $roleFound->id]))
+            ->where($whereUsersRoles)
             ->exec();
     }
 
@@ -94,7 +95,7 @@ class UsersRepository
     {
         $whereUser = $this->database->createParams(cols:["id"], values:[$id], operators:["="]);
 
-        $result = $this->database::$delete
+        $this->database::$delete
             ->delete()
             ->from("users")
             ->where($whereUser)
