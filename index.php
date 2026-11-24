@@ -70,8 +70,13 @@ $container->bind("router", function()
 /// ============================END CONTAINER========================================
 
 // create a session to store the role for the users that are not logged in
-
 $authServices = $container->get("authService");
+$authServices->ensureSessionUnique();
+
+if(!$authServices->isLoggedIn())
+{
+    $_SESSION['role'] = "user";
+}
 
 $pagesController = $container->get("pagesController");
 $gatewayController = $container->get("gatewayController");
