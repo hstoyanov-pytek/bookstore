@@ -1,9 +1,8 @@
 <?php
 
 namespace App\Admin\Controller;
-use \App\Utilities\AuthService;
 use \App\Model\BookDetailsDTO;
-
+use \App\Utilities\StaticHelpers;
 class AdminController extends BaseAdminController
 {
     public function __construct(
@@ -79,21 +78,35 @@ class AdminController extends BaseAdminController
 
     public function displayAllGenres() : void
     {
-        $page = @(int)($_GET['page']) ?? 1;
+        $page = @($_GET['page']) ?? 1;
         $genre = @(string)($_GET['genre']) ?? "";
 
         if(!empty($genre))
         {
-            $results = $this->bookRepository->fetchBooksByGenre($genre);
-
-            $this->render("../templates/genresTable",[
-                'page' => $page,
-                'genre' => $genre,
-                'results' => $results
-            ]);
+            $this->displayBooksByGenre($genre, $page, RESULTS_DISPLAYED_ON_PAGE);
         }
 
         parent::displayAllGenres();
+    }
+
+    public function displayBooksByGenre(string $genre, int $page, int $limit) : void
+    {
+        $entriesCount = $this->bookRepository->getAvailableBooksByGenre($genre);
+        $totalPages = ceil($entriesCount / RESULTS_DISPLAYED_ON_PAGE);
+
+        $paginationArray = StaticHelpers::createPaginationParams($page, $totalPages, [
+            'previousHref'=> "genres?" . http_build_query(['genre' => $genre ,'page' => max(1, $page - 1)]),
+            'nextHref' => "genres?" . http_build_query(['genre' => $genre,'page' => min($page + 1, $totalPages)])
+        ]);
+        $results = $this->bookRepository->fetchBooksByGenre($genre);
+
+        $this->render("../templates/genresTable",array_merge(
+            $paginationArray,
+            array(
+                'genre' => $genre,
+                'results' => $results
+            )
+        ));
     }
 
     public function displayAllLanguages() : void
@@ -272,9 +285,6 @@ class AdminController extends BaseAdminController
     }
     public function editUser() : void
     {
-//        var_dump($_POST);
-//        die();
-
         if(!empty($_POST))
         {
             $details = new \App\Model\UserDetailsDTO();

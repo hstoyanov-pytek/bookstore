@@ -31,7 +31,7 @@ abstract class BaseQuery
     /// Only one operator can be applied for a query, if NOT is selected, then it will be applied at the beginning of the query
     /// and the operator will be ignored and, AND will be applied instead
     ///
-    public function where(string|array $condition, WhereOp $operator = WhereOp::AND) : object
+    public function where(array $condition, WhereOp $operator = WhereOp::AND) : object
     {
         $this->queryString .= " WHERE ";
 
@@ -41,18 +41,6 @@ abstract class BaseQuery
         {
             $this->queryString .= "1";
             return $this;
-        }
-
-        if(is_string($condition))
-        {
-            // TODO FIX, make sure it works with bindings!!!!
-            $this->queryString .= $condition;
-            return $this;
-        }
-
-        if(!is_array($condition))
-        {
-            throw new \Exception ("Condition is not string or array when calling WHERE");
         }
 
         foreach ($condition as $i => $value)
@@ -73,7 +61,6 @@ abstract class BaseQuery
 
                 $this->createBinds($value['alias'], $value['value']);
             }
-
         }
 
         return $this;
@@ -197,6 +184,11 @@ abstract class BaseQuery
             'value' => "{$value}",
             'type' => $type
         ];
+    }
+
+    public function getDebugQuery() : string
+    {
+        return $this->queryString;
     }
 
     private function clearProperties() : void

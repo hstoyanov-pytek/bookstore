@@ -2,6 +2,6 @@
 
 <ul>
     <?php foreach ($authors as $author):?>
-        <li><?php echo e($author->name);?></li>
+        <li><a href="/authors?<?php echo http_build_query(['author'=> $author->name])?>"><?php echo e($author->name);?></a></li>
     <?php endforeach; ?>
 </ul>

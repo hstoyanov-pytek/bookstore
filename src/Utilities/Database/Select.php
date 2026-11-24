@@ -10,34 +10,42 @@ class Select extends BaseQuery
     }
 
     /// $columns = single dimension array/ string of columns desired
-    /// string => "col1, col2, col3...";
+    /// assoc_array [
+    ///     'col' => 'colName',
+    ///     'alias' => 'aliasName'
+    ///  ]
     /// array => ["col1", "col2", "col3"...];
-    public function select(array|string $columns, bool $distinct = false) : object
+    public function select(array $columns = array(), SelectSpec $spec = SelectSpec::DEFAULT) : object
     {
         $this->queryString .= "SELECT ";
 
-        if($distinct === true) $this->queryString .= " DISTINCT ";
+        // if its set to Count/Distinct, return and expect the next call to be the respective function
+        if($spec !== SelectSpec::DEFAULT)
+        {
+            return $this;
+        }
 
         if(empty($columns))
         {
             $this->queryString .= "*";
             return $this;
         }
-
-        if(is_string($columns))
-        {
-            $this->queryString .= $columns;
-            return $this;
-        }
-
-        if(!is_array($columns))
-        {
-            throw new Exception("Columns is not string or array when calling SELECT");
-        }
+        $aliasExist = array_key_exists("alias", $columns[0]);
 
         foreach ($columns as $i => $value)
         {
-            $this->queryString .= $i !== array_key_last($columns) ? "{$columns[$i]}, " : "{$columns[$i]}";
+            if(!$aliasExist)
+            {
+                $this->queryString .= $i !== array_key_last($columns) ?
+                    "{$value['cols']}, ":
+                    "{$value['cols']}";
+            }
+            else
+            {
+                $this->queryString .= $i !== array_key_last($columns) ?
+                    "{$value['cols']} AS {$value['alias']} , ":
+                    "{$value['cols']} AS {$value['alias']}";
+            }
         }
 
         return $this;
@@ -149,4 +157,34 @@ class Select extends BaseQuery
 
         return $this;
     }
+
+    public function count(string $column = "") : object
+    {
+        $this->queryString .= " COUNT";
+
+        $this->queryString .= empty($column) ? "(*)" : "({$column})";
+
+        $this->queryString .= " AS count ";
+
+        return $this;
+    }
+
+    public function distinct(array $columns) : object
+    {
+        if(empty($columns))
+        {
+            throw new \Exception("Distinct columns are empty!");
+        }
+        $this->queryString .= " DISTINCT ";
+
+        foreach ($columns as $i => $value)
+        {
+            $this->queryString .= $i !== array_key_last($columns) ?
+                "{$value}, ":
+                "{$value}";
+        }
+
+        return $this;
+    }
+
 }

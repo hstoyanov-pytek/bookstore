@@ -69,6 +69,10 @@ $container->bind("router", function()
 
 /// ============================END CONTAINER========================================
 
+// create a session to store the role for the users that are not logged in
+
+$authServices = $container->get("authService");
+
 $pagesController = $container->get("pagesController");
 $gatewayController = $container->get("gatewayController");
 $adminController = $container->get("adminController");
@@ -89,7 +93,7 @@ $router->add("GET", '/register', [$gatewayController, 'register']);
 $router->add("POST", '/register', [$gatewayController, 'register']);
 $router->add("POST", '/login', [$gatewayController, 'login']);
 
-if($container->get("authService")->isLoggedIn() && $_SESSION['role'] === "admin")
+if($authServices->isLoggedIn() && $_SESSION['role'] === "admin")
 {
     $router->add("GET", '/admin', [$adminController, 'displayAdminDashboard']);
     $router->add("GET", '/admin/edit', [$adminController, 'editBookEntry']);
@@ -108,7 +112,7 @@ if($container->get("authService")->isLoggedIn() && $_SESSION['role'] === "admin"
     $router->add("POST", '/admin/create', [$adminController, 'createBookEntry']);
 }
 
-if($container->get("authService")->isLoggedIn() && $_SESSION['role'] === "editor")
+if($authServices->isLoggedIn() && $_SESSION['role'] === "editor")
 {
     $router->add("GET", '/editor', [$editorController, 'displayEditorDashboard']);
     $router->add("GET", '/editor/edit', [$editorController, 'editBookEntry']);

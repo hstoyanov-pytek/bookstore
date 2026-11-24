@@ -1,0 +1,16 @@
+<h1>Books displayed for <?php echo e($filter . " " . $name); ?></h1>
+
+<div class="gallery-container">
+    <?php foreach ($results as $result): ?>
+        <div class="gallery-item">
+            <a href="/book?<?php echo http_build_query(['id' => $result->book_id]);?>">
+                <img src="uploads/<?php echo e($result->book_cover_name);?>">
+                <h3><?php echo e($result->book_title);?></h3>
+                <p>By: <?php echo e($result->book_author);?></p>
+            </a>
+        </div>
+    <?php endforeach; ?>
+
+
+    <?php require_once $_SERVER['DOCUMENT_ROOT'] . PAGINATION_PATH; ?>
+</div>

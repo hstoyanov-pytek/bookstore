@@ -57,4 +57,21 @@ class Database
         return $params;
     }
 
+    public function createSelectParams(array $cols, array $alias = array()) : array
+    {
+        $params = array();
+
+        for ($i = 0; $i < count($cols); $i++)
+        {
+            if(!empty($alias))
+            {
+                $params[] = ['cols' => $cols[$i], 'alias' => $alias[$i]];
+                continue;
+            }
+
+            $params[] = ['cols' => $cols[$i]];
+        }
+
+        return $params;
+    }
 }

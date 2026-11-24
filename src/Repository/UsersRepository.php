@@ -12,13 +12,22 @@ class UsersRepository
 
     public function fetchAllUsers() : array
     {
+        $selectParams = $this->database->createSelectParams(
+        cols:[
+            'users.id',
+            'users.email',
+            'users.name',
+            'roles.name'
+        ],
+        alias: [
+            'user_id',
+            'user_email',
+            'user_name',
+            'user_role'
+        ]);
+
         $results = $this->database::$select
-            ->select("
-                users.id as user_id,
-                users.email as user_email,
-                users.name as user_name,
-                roles.name as user_role
-            ")
+            ->select($selectParams)
             ->from("users")
             ->innerJoin("users_roles", "users_roles.users_id = users.id")
             ->innerJoin("roles", "roles.id = users_roles.roles_id")
@@ -30,13 +39,21 @@ class UsersRepository
     public function getUserById($id) : object
     {
         $whereParam = $this->database->createParams(cols:["users.id"], alias:["userId"], values:[$id], operators:["="]);
+        $selectParams = $this->database->createSelectParams(
+          cols:[
+              'users.id',
+              'users.name',
+              'roles.name'
+            ],
+          alias:[
+              'user_id',
+              'user_name',
+              'user_role'
+            ]
+        );
 
         $result = $this->database::$select
-            ->select("
-                users.id as user_id,
-                users.name as user_name,
-                roles.name as user_role
-            ")
+            ->select($selectParams)
             ->from("users")
             ->innerJoin("users_roles", "users_roles.users_id = users.id")
             ->innerJoin("roles", "roles.id = users_roles.roles_id")
@@ -49,7 +66,7 @@ class UsersRepository
     public function getRoles() : array
     {
         $results = $this->database::$select
-            ->select("")
+            ->select()
             ->from("roles")
             ->getResults(RolesModel::class);
 
@@ -78,7 +95,7 @@ class UsersRepository
 
         $whereRole = $this->database->createParams(cols: ['name'], values: [$details->user_role], operators: ["="]);
         $roleFound = $this->database::$select
-            ->select("")
+            ->select()
             ->from("roles")
             ->where($whereRole)
             ->getResult(RolesModel::class);

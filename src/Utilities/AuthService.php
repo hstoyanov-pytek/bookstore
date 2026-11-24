@@ -16,15 +16,25 @@ class AuthService
         if(empty($email) || empty($password)) return false;
 
         $whereParams = $this->database->createParams(cols: ['users.email'], alias:["usersEmail"], values: [$email], operators: ['=']);
+        $selectParams = $this->database->createSelectParams(
+            cols:[
+                'users.id',
+                'users.email',
+                'users.password',
+                'users.name',
+                'roles.name'
+            ],
+            alias: [
+                'user_id',
+                'user_email',
+                'user_password',
+                'user_name',
+                'user_role'
+            ]
+        );
 
         $existingUser = $this->database::$select
-            ->select("
-                users.id as user_id,
-                users.email as user_email,
-                users.password as user_password,
-                users.name as user_name,
-                roles.name as user_role
-            ")
+            ->select($selectParams)
             ->from("users")
             ->innerJoin("users_roles", "users_roles.users_id = users.id")
             ->innerJoin("roles", "users_roles.roles_id = roles.id")
@@ -69,7 +79,6 @@ class AuthService
         if(empty($isLoggedIn))
         {
             header("Location: /");
-            return;
         }
     }
 
@@ -112,14 +121,14 @@ class AuthService
 
         $whereUser = $this->database->createParams(["email"],[$email],["="]);
         $registeredUser = $this->database::$select
-            ->select("")
+            ->select()
             ->from("users")
             ->where($whereUser)
             ->getResult(UserModel::class);
 
         $whereRoles = $this->database->createParams(["name"],["user"],["="]);
         $role = $this->database::$select
-            ->select("")
+            ->select()
             ->from("roles")
             ->where($whereRoles)
             ->getResult(RolesModel::class);
