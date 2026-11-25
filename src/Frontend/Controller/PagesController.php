@@ -16,10 +16,7 @@ class PagesController extends BaseFrontendController
         $entriesCount = $this->bookRepository->getAvailableBooksCount();
         $totalPages = ceil($entriesCount / RESULTS_DISPLAYED_ON_PAGE);
 
-        $results = $this->bookRepository->fetchAvailableByPageWhere(
-            inWhereParams: array(),
-            page: $page,
-            limit: RESULTS_DISPLAYED_ON_PAGE);
+        $results = $this->bookRepository->fetchAllAvailableBooksByPage($page, RESULTS_DISPLAYED_ON_PAGE);
 
         $paginationArray = StaticHelpers::createPaginationParams($page, $totalPages, [
             'previousHref' => "?" . http_build_query(['page' => max(1, $page - 1)]),

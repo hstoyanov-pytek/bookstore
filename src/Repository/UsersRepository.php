@@ -3,12 +3,26 @@
 namespace App\Repository;
 use \App\Model\UserDetailsDTO;
 use \App\Model\RolesModel;
+use \App\Model\CountModel;
+
+use App\Utilities\Database\SelectSpec;
 
 class UsersRepository
 {
     public function __construct(
         private \App\Utilities\Database\Database $database
     ){}
+
+    public function getCountUsers() : int
+    {
+        $result = $this->database::$select
+            ->select(spec: SelectSpec::COUNT)
+            ->count()
+            ->from("users")
+            ->getResult(CountModel::class);
+
+        return $result->count;
+    }
 
     public function fetchAllUsers() : array
     {
@@ -36,7 +50,7 @@ class UsersRepository
         return $results;
     }
 
-    public function getUserById($id) : object
+    public function fetchUserById($id) : object
     {
         $whereParam = $this->database->createParams(cols:["users.id"], alias:["userId"], values:[$id], operators:["="]);
         $selectParams = $this->database->createSelectParams(
@@ -63,7 +77,7 @@ class UsersRepository
         return $result;
     }
 
-    public function getRoles() : array
+    public function fetchRoles() : array
     {
         $results = $this->database::$select
             ->select()
@@ -72,14 +86,7 @@ class UsersRepository
 
         return $results;
     }
-///
-    /// $columns = assoc_array
-    /// [
-    ///     'col' => 'colName',
-    ///     'alias' => 'col_alias'
-    ///     'value => 'value'
-    /// ]
-    ///
+
     public function updateUser(UserDetailsDTO $details) : void
     {
         if(empty($details)){

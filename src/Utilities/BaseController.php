@@ -43,7 +43,7 @@ abstract class BaseController
         if(!empty($author))
         {
             $this->displayBooksByAuthor($author, $page, RESULTS_DISPLAYED_ON_PAGE);
-            die();
+            return;
         }
 
         $prefix = @$_SESSION['role'] === "user" ? "" : "/" . $_SESSION['role'];
@@ -94,7 +94,7 @@ abstract class BaseController
         if(!empty($genre))
         {
             $this->displayBooksByGenre($genre, $page, RESULTS_DISPLAYED_ON_PAGE);
-            die();
+            return;
         }
         $genres = $this->bookRepository->fetchAllGenresByPage($page, RESULTS_DISPLAYED_ON_PAGE);
 
@@ -120,9 +120,6 @@ abstract class BaseController
         $results = $this->bookRepository->fetchAvailableBooksByGenre($genre, $page, $limit);
 
         $prefix = @$_SESSION['role'] === "user" ? "" : "/" . $_SESSION['role'];
-
-        var_dump($prefix);
-        die();
 
         $paginationArray = StaticHelpers::createPaginationParams($page, $totalPages, [
             'previousHref' => $prefix . "/genres?" . http_build_query(['page' => max(1, $page - 1), 'genre' => $genre]),
@@ -150,7 +147,7 @@ abstract class BaseController
         if(!empty($language))
         {
             $this->displayBooksByLanguage($language, $page, RESULTS_DISPLAYED_ON_PAGE);
-            die();
+            return;
         }
 
         $languages = $this->bookRepository->fetchAllLanguagesByPage($page, RESULTS_DISPLAYED_ON_PAGE);
@@ -175,6 +172,7 @@ abstract class BaseController
     {
         $entriesCount = $this->bookRepository->getAvailableBooksCountByLanguage($language);
         $totalPages = ceil($entriesCount / RESULTS_DISPLAYED_ON_PAGE);
+
         $results = $this->bookRepository->fetchAvailableBooksByLanguage($language, $page, $limit);
 
         $prefix = @$_SESSION['role'] === "user" ? "" : "/" . $_SESSION['role'];
@@ -204,7 +202,7 @@ abstract class BaseController
         if(!empty($publisher))
         {
             $this->displayBooksByPublisher($publisher, $page, RESULTS_DISPLAYED_ON_PAGE);
-            die();
+            return;
         }
 
         $publishers = $this->bookRepository->fetchAllPublishersByPage($page, RESULTS_DISPLAYED_ON_PAGE);

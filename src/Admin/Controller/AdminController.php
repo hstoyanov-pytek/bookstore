@@ -317,11 +317,23 @@ class AdminController extends BaseAdminController
 
     public function displayAllUsers() : void
     {
+        $page = @($_GET['page']) ?? 1;
+        $entriesCount = $this->userRepository->getCountUsers();
+        $totalPages = ceil($entriesCount / RESULTS_DISPLAYED_ON_PAGE);
+
         $results = $this->userRepository->fetchAllUsers();
 
-        $this->displayNavigation("users", [
-            'results' => $results
+        $paginationArray = StaticHelpers::createPaginationParams($page, $totalPages, [
+            'previousHref'=> "/admin/users?" . http_build_query(['page' => max(1, $page - 1)]),
+            'nextHref' => "/admin/users?" . http_build_query(['page' => min($page + 1, $totalPages)])
         ]);
+
+        $this->displayNavigation("users", array_merge(
+            $paginationArray,
+            array(
+                'results' => $results
+            )
+        ));
     }
     public function deleteUser() : void
     {
@@ -362,8 +374,8 @@ class AdminController extends BaseAdminController
             die();
         }
 
-        $user = $this->userRepository->getUserById($id);
-        $roles = $this->userRepository->getRoles();
+        $user = $this->userRepository->fetchUserById($id);
+        $roles = $this->userRepository->fetchRoles();
 
         parent::render("pages/editUser", [
             'user' => $user,

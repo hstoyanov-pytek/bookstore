@@ -365,7 +365,7 @@ class BookRepository
             ->where($whereGenres)
             ->getResult(GenresModel::class);
 
-        $whereParams = $this->database->createParams(cols: ['book_genres.genres_id'], alias:["bgGenresId"], values:[$genreFound->id], operators:['=']);
+        $whereParams = $this->database->createParams(cols: ['book_genres.genres_id'], alias:["genresId"], values:[$genreFound->id], operators:['=']);
         $results = $this->fetchAvailableByPageWhere($whereParams, $page, $limit);
         return $results;
     }
@@ -957,5 +957,10 @@ class BookRepository
             ->getResults(BookDetailsDTO::class);
 
         return $results;
+    }
+
+    public function fetchAllAvailableBooksByPage(int $page, int $limit) : array
+    {
+        return $this->fetchAvailableByPageWhere(array(), $page, $limit);
     }
 }

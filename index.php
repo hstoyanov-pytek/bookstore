@@ -116,7 +116,7 @@ if($authServices->isLoggedIn() && $_SESSION['role'] === "admin")
     $router->add("POST", '/admin/delete', [$adminController, 'deleteBookEntryById']);
     $router->add("POST", '/admin/create', [$adminController, 'createBookEntry']);
 }
-
+var_dump($_SESSION);
 if($authServices->isLoggedIn() && $_SESSION['role'] === "editor")
 {
     $router->add("GET", '/editor', [$editorController, 'displayEditorDashboard']);
