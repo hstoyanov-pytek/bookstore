@@ -83,8 +83,9 @@ class BookRepository
         return $result;
     }
 
-    private function getBooksWhere(array $params) : array
+    private function getBooksWhere(array $params, int $page, int $limit) : array
     {
+        $offset = ($page - 1) * $limit;
         $selectParams = $this->database->createSelectParams(
             cols:[
                 'book.id',
@@ -123,6 +124,60 @@ class BookRepository
             ->innerJoin("book_languages", "book.id = book_languages.book_id")
             ->innerJoin("languages", "book_languages.languages_id = languages.id")
             ->where($params)
+            ->limit($limit, $offset)
+            ->getResults(BookDetailsDTO::class);
+
+        return $results;
+    }
+
+    private function fetchAvailableByPageWhere(array $inWhereParams, int $page, int $limit) : array
+    {
+        $whereAvailable = $this->database->createParams(cols: ['available'], values:['1'], operators:['=']);
+        $whereParams = array_merge($inWhereParams, $whereAvailable);
+
+        $offset = ($page - 1) * $limit;
+
+        $selectParams = $this->database->createSelectParams(
+            cols: [
+                'book.id',
+                'book.title',
+                'book.year_published',
+                'book.available',
+                'book.cover_name',
+                'publisher.name',
+                'author.name',
+                'genres.name',
+                'languages.name',
+            ],
+            alias: [
+                'book_id',
+                'book_title',
+                'year_published',
+                'book_available',
+                'book_cover_name',
+                'publisher',
+                'book_author',
+                'book_genres',
+                'book_languages'
+            ]
+        );
+
+        $results = $this->database::$select
+            ->select($selectParams)
+            ->from("book")
+            ->innerJoin("publisher", "book.publisher_id = publisher.id")
+
+            ->innerJoin("book_author", "book.id = book_author.book_id")
+            ->innerJoin("author", "book_author.author_id = author.id")
+
+            ->innerJoin("book_genres", "book.id = book_genres.book_id")
+            ->innerJoin("genres", "book_genres.genres_id = genres.id")
+
+            ->innerJoin("book_languages", "book.id = book_languages.book_id")
+            ->innerJoin("languages", "book_languages.languages_id = languages.id")
+            ->where($whereParams)
+            ->orderBy(['book.id'])
+            ->limit($limit, $offset)
             ->getResults(BookDetailsDTO::class);
 
         return $results;
@@ -243,7 +298,593 @@ class BookRepository
         $this->database::$insert->insertInto("book_languages", ['book_id', 'languages_id'])->values(array($book->id, $languageEntry->id))->exec();
     }
 
-    public function fetchByPage(int $page, int $amountResults) : array
+    public function deleteBookEntry(int $id, bool $softDelete = true) : void
+    {
+        $whereParams = $this->database->createParams(['id'], [$id], ['=']);
+        if($softDelete)
+        {
+            $this->database::$update
+                ->update("book")
+                ->set(array(['col' => "available", 'value' => 0]))
+                ->where($whereParams)
+                ->exec();
+        }
+        else
+        {
+            $this->database::$delete
+                ->delete()
+                ->from("book")
+                ->where($whereParams)
+                ->exec();
+        }
+    }
+
+    public function switchAvailabilityState(int $id) : void
+    {
+        $whereParams = $this->database->createParams(['id'],[$id],['=']);
+
+        $currentState = $this->database::$select
+            ->select(array(['cols' => 'available']))
+            ->from("book")
+            ->where($whereParams)
+            ->getResult(BookModel::class);
+
+        $this->database::$update
+            ->update("book")
+            ->set(array(['col' => 'available', 'value'=>(int)!$currentState->available]))
+            ->where($whereParams)
+            ->exec();
+    }
+
+    // ============================================= Genres =================================================
+    public function fetchAllGenres() : array
+    {
+        return $this->database::$select
+            ->select()
+            ->from("genres")
+            ->getResults(GenresModel::class);
+    }
+
+    public function fetchAllGenresByPage(int $page, int $limit) : array
+    {
+        $offset = ($page - 1) * $limit;
+
+        return $this->database::$select
+            ->select()
+            ->from("genres")
+            ->limit($limit, $offset)
+            ->getResults(GenresModel::class);
+    }
+
+    public function fetchAvailableBooksByGenre(string $genre, int $page, int $limit) : array
+    {
+        $whereGenres = $this->database->createParams(cols: ['name'], values: [$genre], operators: ["="]);
+        $genreFound = $this->database::$select
+            ->select()
+            ->from("genres")
+            ->where($whereGenres)
+            ->getResult(GenresModel::class);
+
+        $whereParams = $this->database->createParams(cols: ['book_genres.genres_id'], alias:["bgGenresId"], values:[$genreFound->id], operators:['=']);
+        $results = $this->fetchAvailableByPageWhere($whereParams, $page, $limit);
+        return $results;
+    }
+
+    public function getAvailableBooksCountByGenre(string $genre) : int
+    {
+        $whereGenre = $this->database->createParams(cols:['name'], values: [$genre], operators: ['=']);
+        $foundGenre = $this->database::$select
+            ->select()
+            ->from("genres")
+            ->where($whereGenre)
+            ->getResult(GenresModel::class);
+
+        $whereParams = $this->database->createParams(
+          cols:["book.available", "book_genres.genres_id"],
+            alias: ["available", "genres_id"],
+            values: ["1", $foundGenre->id],
+            operators: ["=", "="]
+        );
+
+        $result = $this->database::$select
+            ->select(spec: SelectSpec::COUNT)
+            ->count()
+            ->from("book")
+            ->innerJoin("book_genres", "book.id = book_genres.book_id")
+            ->where($whereParams)
+            ->getResult(CountModel::class);
+
+        return $result->count;
+    }
+
+    public function getAllBooksCountByGenre(string $genre) : int
+    {
+        $whereGenre = $this->database->createParams(cols:['name'], values: [$genre], operators: ['=']);
+        $foundGenre = $this->database::$select
+            ->select()
+            ->from("genres")
+            ->where($whereGenre)
+            ->getResult(GenresModel::class);
+
+        $whereParams = $this->database->createParams(
+          cols:["book_genres.genres_id"],
+            alias: ["genres_id"],
+            values: [$foundGenre->id],
+            operators: ["="]
+        );
+
+        $result = $this->database::$select
+            ->select(spec: SelectSpec::COUNT)
+            ->count()
+            ->from("book")
+            ->innerJoin("book_genres", "book.id = book_genres.book_id")
+            ->where($whereParams)
+            ->getResult(CountModel::class);
+
+        return $result->count;
+    }
+
+    public function fetchBooksByGenre(string $genre, int $page, int $limit) : array
+    {
+        $whereGenre = $this->database->createParams(cols:["name"], values:[$genre], operators:["="]);
+        $foundGenre = $this->database::$select
+            ->select()
+            ->from("genres")
+            ->where($whereGenre)
+            ->getResult(GenresModel::class);
+
+        $whereParams = $this->database->createParams(cols:["genres.id"], alias:["genreId"], values:[$foundGenre->id], operators:["="]);
+
+        $filteredResults = $this->getBooksWhere($whereParams, $page, $limit);
+
+        return $filteredResults;
+    }
+
+    public function getGenresCount() : int
+    {
+        $result = $this->database::$select
+            ->select(spec: SelectSpec::COUNT)
+            ->count()
+            ->from("genres")
+            ->getResult(CountModel::class);
+
+        return $result->count;
+    }
+
+
+    // ============================================= Authors =================================================
+
+    public function fetchAllAuthors() : array
+    {
+        return $this->database::$select
+            ->select()
+            ->from("author")
+            ->getResults(AuthorModel::class);
+    }
+
+    public function fetchAllAuthorsByPage(int $page, int $limit) : array
+    {
+        $offset = ($page - 1) * $limit;
+        return $this->database::$select
+            ->select()
+            ->from("author")
+            ->limit($limit, $offset)
+            ->getResults(AuthorModel::class);
+    }
+
+    public function fetchAvailableBooksByAuthor(string $authorName, int $page, int $limit) : array
+    {
+        $whereAuthor = $this->database->createParams(cols:["name"],values:[$authorName],operators:["="]);
+        $foundAuthor = $this->database::$select
+            ->select()
+            ->from("author")
+            ->where($whereAuthor)
+            ->getResult(AuthorModel::class);
+
+        $whereParams = $this->database->createParams(cols:["book_author.author_id"],alias:["authorId"], values:[$foundAuthor->id],operators:["="]);
+        $filteredResults = $this->fetchAvailableByPageWhere($whereParams, $page, $limit);
+
+        return $filteredResults;
+    }
+
+    public function getAvailableBooksCountByAuthor(string $author) : int
+    {
+        $whereAuthor = $this->database->createParams(cols:["name"], values: [$author], operators: ["="]);
+        $foundAuthor = $this->database::$select
+            ->select()
+            ->from("author")
+            ->where($whereAuthor)
+            ->getResult(AuthorModel::class);
+
+        $whereParams = $this->database->createParams(
+            cols:["book.available", "book_author.author_id"],
+            alias: ["available", "authorId"],
+            values: ["1", $foundAuthor->id],
+            operators: ["=", "="]
+        );
+
+        $result = $this->database::$select
+            ->select(spec: SelectSpec::COUNT)
+            ->count()
+            ->from("book")
+            ->innerJoin("book_author", "book.id = book_author.book_id")
+            ->where($whereParams)
+            ->getResult(CountModel::class);
+
+        return $result->count;
+    }
+
+    public function getAllBooksCountByAuthor(string $author): int
+    {
+        $whereAuthor = $this->database->createParams(cols:["name"], values: [$author], operators: ["="]);
+        $foundAuthor = $this->database::$select
+            ->select()
+            ->from("author")
+            ->where($whereAuthor)
+            ->getResult(AuthorModel::class);
+
+        $whereParams = $this->database->createParams(
+            cols:["book_author.author_id"],
+            alias: ["authorId"],
+            values: [$foundAuthor->id],
+            operators: ["="]
+        );
+
+        $result = $this->database::$select
+            ->select(spec: SelectSpec::COUNT)
+            ->count()
+            ->from("book")
+            ->innerJoin("book_author", "book.id = book_author.book_id")
+            ->where($whereParams)
+            ->getResult(CountModel::class);
+
+        return $result->count;
+
+    }
+
+    public function fetchBooksByAuthor(string $author, int $page, int $limit) : array
+    {
+        $whereAuthor = $this->database->createParams(cols: ["name"], values:[$author], operators:["="]);
+        $foundAuthor = $this->database::$select
+            ->select()
+            ->from("author")
+            ->where($whereAuthor)
+            ->getResult(AuthorModel::class);
+
+        $whereParams = $this->database->createParams(cols:["author.id"], alias:["authorId"], values:[$foundAuthor->id], operators:["="]);
+        $filteredResults = $this->getBooksWhere($whereParams, $page, $limit);
+
+        return $filteredResults;
+    }
+
+    public function getAuthorsCount() : int
+    {
+        $result = $this->database::$select
+            ->select(spec: SelectSpec::COUNT)
+            ->count()
+            ->from("author")
+            ->getResult(CountModel::class);
+
+        return $result->count;
+    }
+
+    // ============================================= Languages =================================================
+
+    public function fetchAllLanguages() : array
+    {
+        return $this->database::$select
+            ->select()
+            ->from("languages")
+            ->getResults(LanguagesModel::class);
+    }
+
+    public function fetchAllLanguagesByPage(int $page, int $limit) : array
+    {
+        $offset = ($page - 1) * $limit;
+        return $this->database::$select
+            ->select()
+            ->from("languages")
+            ->limit($limit, $offset)
+            ->getResults(LanguagesModel::class);
+    }
+
+    public function fetchAvailableBooksByLanguage(string $language, int $page, int $limit) : array
+    {
+        $whereLanguage = $this->database->createParams(cols:["name"], values:[$language], operators:["="]);
+        $foundLanguage = $this->database::$select
+            ->select()
+            ->from("languages")
+            ->where($whereLanguage)
+            ->getResult(LanguagesModel::class);
+
+        $whereParams = $this->database->createParams(cols:["book_languages.languages_id"], alias:["languageId"], values:[$foundLanguage->id], operators:["="]);
+
+        $filteredResult = $this->fetchAvailableByPageWhere($whereParams, $page, $limit);
+        return $filteredResult;
+    }
+
+    public function getAvailableBooksCountByLanguage(string $language) : int
+    {
+        $whereLanguage = $this->database->createParams(cols:["name"], values:[$language], operators:["="]);
+        $foundLanguage = $this->database::$select
+            ->select()
+            ->from("languages")
+            ->where($whereLanguage)
+            ->getResult(LanguagesModel::class);
+
+        $whereParams = $this->database->createParams(
+            cols:["book.available", "book_languages.languages_id"],
+            alias: ["available", "languageId"],
+            values: ["1", $foundLanguage->id],
+            operators: ["=", "="]
+        );
+
+        $result = $this->database::$select
+            ->select(spec: SelectSpec::COUNT)
+            ->count()
+            ->from("book")
+            ->innerJoin("book_languages", "book.id = book_languages.book_id")
+            ->where($whereParams)
+            ->getResult(CountModel::class);
+
+        return $result->count;
+    }
+
+    public function getAllBooksCountByLanguage(string $language) : int
+    {
+        $whereLanguage = $this->database->createParams(cols:["name"], values:[$language], operators:["="]);
+        $foundLanguage = $this->database::$select
+            ->select()
+            ->from("languages")
+            ->where($whereLanguage)
+            ->getResult(LanguagesModel::class);
+
+        $whereParams = $this->database->createParams(
+            cols:["book_languages.languages_id"],
+            alias: ["languageId"],
+            values: [$foundLanguage->id],
+            operators: ["="]
+        );
+
+        $result = $this->database::$select
+            ->select(spec: SelectSpec::COUNT)
+            ->count()
+            ->from("book")
+            ->innerJoin("book_languages", "book.id = book_languages.book_id")
+            ->where($whereParams)
+            ->getResult(CountModel::class);
+
+        return $result->count;
+    }
+
+    public function fetchBooksByLanguage(string $language, int $page, int $limit) : array
+    {
+        $whereLanguage = $this->database->createParams(cols:["name"], values:[$language], operators:["="]);
+        $foundLanguage = $this->database::$select
+            ->select()
+            ->from("languages")
+            ->where($whereLanguage)
+            ->getResult(LanguagesModel::class);
+
+        $whereParams = $this->database->createParams(cols:["languages.id"], alias:["languageId"], values:[$foundLanguage->id], operators:["="]);
+
+        $filteredResults = $this->getBooksWhere($whereParams, $page, $limit);
+
+        return $filteredResults;
+    }
+
+    public function getLanguagesCount() : int
+    {
+        $result = $this->database::$select
+            ->select(spec: SelectSpec::COUNT)
+            ->count()
+            ->from("languages")
+            ->getResult(CountModel::class);
+        return $result->count;
+    }
+
+    // ============================================= Publishers =================================================
+
+    public function fetchAllPublishers() : array
+    {
+        return $this->database::$select
+            ->select(array(['cols'=> 'name']))
+            ->from("publisher")
+            ->getResults(PublisherModel::class);
+    }
+
+    public function fetchAllPublishersByPage(int $page, int $limit) : array
+    {
+        $offset = ($page - 1) * $limit;
+        return $this->database::$select
+            ->select(array(['cols'=> 'name']))
+            ->from("publisher")
+            ->limit($limit, $offset)
+            ->getResults(PublisherModel::class);
+    }
+
+    public function fetchAvailableBooksByPublisher(string $publisher, int $page, int $limit) : array
+    {
+        $wherePublisher = $this->database->createParams(cols:["name"], values:[$publisher], operators:["="]);
+        $foundPublisher = $this->database::$select
+            ->select()
+            ->from("publisher")
+            ->where($wherePublisher)
+            ->getResult(PublisherModel::class);
+
+        $whereParams = $this->database->createParams(cols:["publisher.id"], alias:["publisherId"], values:[$foundPublisher->id], operators:["="]);
+
+        $filteredResults = $this->fetchAvailableByPageWhere($whereParams, $page, $limit);
+
+        return $filteredResults;
+    }
+
+    public function getAvailableBooksCountByPublisher(string $publisher) : int
+    {
+        $wherePublisher = $this->database->createParams(cols:["name"], values: [$publisher], operators: ["="]);
+
+        $foundPublisher = $this->database::$select
+            ->select()
+            ->from("publisher")
+            ->where($wherePublisher)
+            ->getResult(PublisherModel::class);
+
+        $whereParams = $this->database->createParams(
+            cols:["book.available", "book.publisher_id"],
+            alias: ["available", "publisherId"],
+            values: ["1", $foundPublisher->id],
+            operators: ["=", "="]
+        );
+
+        $result = $this->database::$select
+            ->select(spec: SelectSpec::COUNT)
+            ->count()
+            ->from("book")
+            ->where($whereParams)
+            ->getResult(CountModel::class);
+
+        return $result->count;
+    }
+
+    public function getAllBooksCountByPublisher(string $publisher) : int
+    {
+        $wherePublisher = $this->database->createParams(cols:["name"], values: [$publisher], operators: ["="]);
+
+        $foundPublisher = $this->database::$select
+            ->select()
+            ->from("publisher")
+            ->where($wherePublisher)
+            ->getResult(PublisherModel::class);
+
+        $whereParams = $this->database->createParams(
+            cols:["book.publisher_id"],
+            alias: ["publisherId"],
+            values: [$foundPublisher->id],
+            operators: ["="]
+        );
+
+        $result = $this->database::$select
+            ->select(spec: SelectSpec::COUNT)
+            ->count()
+            ->from("book")
+            ->where($whereParams)
+            ->getResult(CountModel::class);
+
+        return $result->count;
+    }
+
+    public function fetchBooksByPublisher(string $publisher, int $page, int $limit) : array
+    {
+        $wherePublisher = $this->database->createParams(cols: ["name"], values:[$publisher], operators:["="]);
+        $foundPublisher = $this->database::$select
+            ->select()
+            ->from("publisher")
+            ->where($wherePublisher)
+            ->getResult(PublisherModel::class);
+
+        $whereParams = $this->database->createParams(cols:["publisher_id"], alias: ["publisherId"], values:[$foundPublisher->id], operators:["="]);
+        $filteredResults = $this->getBooksWhere($whereParams, $page, $limit);
+
+        return $filteredResults;
+    }
+
+    public function getPublishersCount() : int
+    {
+        $result = $this->database::$select
+            ->select(spec: SelectSpec::COUNT)
+            ->count()
+            ->from("publisher")
+            ->getResult(CountModel::class);
+
+        return $result->count;
+    }
+
+    // ============================================= All Books =================================================
+    public function getAvailableBooksCount() : int
+    {
+        $whereParams = $this->database->createParams(cols: ["available"], values: ["1"], operators: ["="]);
+        $result = $this->database::$select
+            ->select(spec: SelectSpec::COUNT)
+            ->count()
+            ->from("book")
+            ->where($whereParams)
+            ->getResult(CountModel::class);
+
+        return $result->count;
+    }
+
+    public function getAllBooksCount() : int
+    {
+        $result = $this->database::$select
+            ->select(spec: SelectSpec::COUNT)
+            ->count()
+            ->from("book")
+            ->getResult(CountModel::class);
+
+        return $result->count;
+    }
+
+    public function fetchBookByName(string $title) : null|BookDetailsDTO
+    {
+        $whereBook = $this->database->createParams(cols:['book.title'], alias:['bookTitle'], values:[$title], operators:["="]);
+
+        $selectParams = $this->database->createSelectParams(
+            cols:[
+                'book.id',
+                'book.title',
+                'book.year_published',
+                'book.available',
+                'publisher.name',
+                'author.name',
+                'genres.name',
+                'languages.name'
+            ],
+            alias: [
+                'book_id',
+                'book_title',
+                'year_published',
+                'book_available',
+                'publisher',
+                'book_author',
+                'book_genres',
+                'book_languages'
+            ]
+        );
+
+        $result = $this->database::$select
+            ->select($selectParams)
+            ->from("book")
+            ->innerJoin("publisher", "book.publisher_id = publisher.id")
+
+            ->innerJoin("book_author", "book.id = book_author.book_id")
+            ->innerJoin("author", "book_author.author_id = author.id")
+
+            ->innerJoin("book_genres", "book.id = book_genres.book_id")
+            ->innerJoin("genres", "book_genres.genres_id = genres.id")
+
+            ->innerJoin("book_languages", "book.id = book_languages.book_id")
+            ->innerJoin("languages", "book_languages.languages_id = languages.id")
+
+            ->where($whereBook)
+            ->getResult(BookDetailsDTO::class);
+
+        return $result;
+    }
+
+    public function fetchBookById(int $id) : null|BookDetailsDTO
+    {
+        $whereBook = $this->database->createParams(cols: ['book.id'], alias:['book_id'], values:[$id], operators:['=']);
+
+        $result = $this->getBookWhere($whereBook);
+        if(!empty($result))
+        {
+            return $result;
+        }
+
+        return null;
+    }
+
+    public function fetchAllByPage(int $page, int $amountResults) : array
     {
 //        /SELECT
 //        book.id as book_id,
@@ -311,497 +952,6 @@ class BookRepository
 
             ->innerJoin("book_languages", "book.id = book_languages.book_id")
             ->innerJoin("languages", "book_languages.languages_id = languages.id")
-            ->orderBy(['book.id'])
-            ->limit($limit, $offset)
-            ->getResults(BookDetailsDTO::class);
-
-        return $results;
-    }
-
-    public function deleteBookEntry(int $id, bool $softDelete = true) : void
-    {
-        $whereParams = $this->database->createParams(['id'], [$id], ['=']);
-        if($softDelete)
-        {
-            $this->database::$update
-                ->update("book")
-                ->set(array(['col' => "available", 'value' => 0]))
-                ->where($whereParams)
-                ->exec();
-        }
-        else
-        {
-            $this->database::$delete
-                ->delete()
-                ->from("book")
-                ->where($whereParams)
-                ->exec();
-        }
-    }
-
-    public function switchAvailabilityState(int $id) : void
-    {
-        $whereParams = $this->database->createParams(['id'],[$id],['=']);
-
-        $currentState = $this->database::$select
-            ->select(array(['cols' => 'available']))
-            ->from("book")
-            ->where($whereParams)
-            ->getResult(BookModel::class);
-
-        $this->database::$update
-            ->update("book")
-            ->set(array(['col' => 'available', 'value'=>(int)!$currentState->available]))
-            ->where($whereParams)
-            ->exec();
-    }
-
-    // ============================================= Genres =================================================
-    public function fetchAllGenres(int $page, int $limit) : array
-    {
-        $offset = ($page - 1) * $limit;
-
-        return $this->database::$select
-            ->select()
-            ->from("genres")
-            ->limit($limit, $offset)
-            ->getResults(GenresModel::class);
-    }
-
-    public function fetchAvailableBooksByGenre(string $genre, int $page, int $limit) : array
-    {
-        $whereGenres = $this->database->createParams(cols: ['name'], values: [$genre], operators: ["="]);
-        $genreFound = $this->database::$select
-            ->select()
-            ->from("genres")
-            ->where($whereGenres)
-            ->getResult(GenresModel::class);
-
-        $whereParams = $this->database->createParams(cols: ['book_genres.genres_id'], alias:["bgGenresId"], values:[$genreFound->id], operators:['=']);
-        $results = $this->fetchAvailableByPageWhere($whereParams, $page, $limit);
-        return $results;
-    }
-
-    public function getAvailableBooksCountByGenre(string $genre) : int
-    {
-        $whereGenre = $this->database->createParams(cols:['name'], values: [$genre], operators: ['=']);
-        $foundGenre = $this->database::$select
-            ->select()
-            ->from("genres")
-            ->where($whereGenre)
-            ->getResult(GenresModel::class);
-
-        $whereParams = $this->database->createParams(
-          cols:["book.available", "book_genres.genres_id"],
-            alias: ["available", "genres_id"],
-            values: ["1", $foundGenre->id],
-            operators: ["=", "="]
-        );
-
-        $result = $this->database::$select
-            ->select(spec: SelectSpec::COUNT)
-            ->count()
-            ->from("book")
-            ->innerJoin("book_genres", "book.id = book_genres.book_id")
-            ->where($whereParams)
-            ->getResult(CountModel::class);
-
-        return $result->count;
-    }
-
-    public function fetchBooksByGenre(string $genre) : array
-    {
-        $whereGenre = $this->database->createParams(cols:["name"], values:[$genre], operators:["="]);
-        $foundGenre = $this->database::$select
-            ->select()
-            ->from("genres")
-            ->where($whereGenre)
-            ->getResult(GenresModel::class);
-
-        $whereParams = $this->database->createParams(cols:["genres.id"], alias:["genreId"], values:[$foundGenre->id], operators:["="]);
-
-        $filteredResults = $this->getBooksWhere($whereParams);
-
-        return $filteredResults;
-    }
-
-    public function getGenresCount() : int
-    {
-        $result = $this->database::$select
-            ->select(spec: SelectSpec::COUNT)
-            ->count()
-            ->from("genres")
-            ->getResult(CountModel::class);
-
-        return $result->count;
-    }
-
-
-    // ============================================= Authors =================================================
-
-    public function fetchAllAuthors(int $page, int $limit) : array
-    {
-        $offset = ($page - 1) * $limit;
-        return $this->database::$select
-            ->select()
-            ->from("author")
-            ->limit($limit, $offset)
-            ->getResults(AuthorModel::class);
-    }
-
-    public function fetchAvailableBooksByAuthor(string $authorName, int $page, int $limit) : array
-    {
-        $whereAuthor = $this->database->createParams(cols:["name"],values:[$authorName],operators:["="]);
-        $foundAuthor = $this->database::$select
-            ->select()
-            ->from("author")
-            ->where($whereAuthor)
-            ->getResult(AuthorModel::class);
-
-        $whereParams = $this->database->createParams(cols:["book_author.author_id"],alias:["authorId"], values:[$foundAuthor->id],operators:["="]);
-        $filteredResults = $this->fetchAvailableByPageWhere($whereParams, $page, $limit);
-
-        return $filteredResults;
-    }
-
-    public function getAvailableBooksCountByAuthor(string $author) : int
-    {
-        $whereAuthor = $this->database->createParams(cols:["name"], values: [$author], operators: ["="]);
-        $foundAuthor = $this->database::$select
-            ->select()
-            ->from("author")
-            ->where($whereAuthor)
-            ->getResult(AuthorModel::class);
-
-        $whereParams = $this->database->createParams(
-            cols:["book.available", "book_author.author_id"],
-            alias: ["available", "authorId"],
-            values: ["1", $foundAuthor->id],
-            operators: ["=", "="]
-        );
-
-        $result = $this->database::$select
-            ->select(spec: SelectSpec::COUNT)
-            ->count()
-            ->from("book")
-            ->innerJoin("book_author", "book_id = book_author.book_id")
-            ->where($whereParams)
-            ->getResult(CountModel::class);
-
-        return $result->count;
-    }
-
-    public function fetchBooksByAuthor(string $author) : array
-    {
-        $whereAuthor = $this->database->createParams(cols: ["name"], values:[$author], operators:["="]);
-        $foundAuthor = $this->database::$select
-            ->select()
-            ->from("author")
-            ->where($whereAuthor)
-            ->getResult(AuthorModel::class);
-
-        $whereParams = $this->database->createParams(cols:["author.id"], alias:["authorId"], values:[$foundAuthor->id], operators:["="]);
-        $filteredResults = $this->getBooksWhere($whereParams);
-
-        return $filteredResults;
-    }
-
-    public function getAuthorsCount() : int
-    {
-        $result = $this->database::$select
-            ->select(spec: SelectSpec::COUNT)
-            ->count()
-            ->from("author")
-            ->getResult(CountModel::class);
-
-        return $result->count;
-    }
-
-    // ============================================= Languages =================================================
-
-    public function fetchAllLanguages(int $page, int $limit) : array
-    {
-        $offset = ($page - 1) * $limit;
-        return $this->database::$select
-            ->select()
-            ->from("languages")
-            ->limit($limit, $offset)
-            ->getResults(LanguagesModel::class);
-    }
-
-    public function fetchAvailableBooksByLanguage(string $language, int $page, int $limit) : array
-    {
-        $whereLanguage = $this->database->createParams(cols:["name"], values:[$language], operators:["="]);
-        $foundLanguage = $this->database::$select
-            ->select()
-            ->from("languages")
-            ->where($whereLanguage)
-            ->getResult(LanguagesModel::class);
-
-        $whereParams = $this->database->createParams(cols:["book_languages.languages_id"], alias:["languageId"], values:[$foundLanguage->id], operators:["="]);
-
-        $filteredResult = $this->fetchAvailableByPageWhere($whereParams, $page, $limit);
-        return $filteredResult;
-    }
-
-    public function getAvailableBooksCountByLanguage(string $language) : int
-    {
-        $whereLanguage = $this->database->createParams(cols:["name"], values:[$language], operators:["="]);
-        $foundLanguage = $this->database::$select
-            ->select()
-            ->from("languages")
-            ->where($whereLanguage)
-            ->getResult(LanguagesModel::class);
-
-        $whereParams = $this->database->createParams(
-            cols:["book.available", "book_languages.languages_id"],
-            alias: ["available", "languageId"],
-            values: ["1", $foundLanguage->id],
-            operators: ["=", "="]
-        );
-
-        $result = $this->database::$select
-            ->select(spec: SelectSpec::COUNT)
-            ->count()
-            ->from("book")
-            ->innerJoin("book_languages", "book.id = book_languages.book_id")
-            ->where($whereParams)
-            ->getResult(CountModel::class);
-
-        return $result->count;
-    }
-
-    public function fetchBooksByLanguage(string $language) : array
-    {
-        $whereLanguage = $this->database->createParams(cols:["name"], values:[$language], operators:["="]);
-        $foundLanguage = $this->database::$select
-            ->select()
-            ->from("languages")
-            ->where($whereLanguage)
-            ->getResult(LanguagesModel::class);
-
-        $whereParams = $this->database->createParams(cols:["languages.id"], alias:["languageId"], values:[$foundLanguage->id], operators:["="]);
-
-        $filteredResults = $this->getBooksWhere($whereParams);
-
-        return $filteredResults;
-    }
-
-    public function getLanguagesCount() : int
-    {
-        $result = $this->database::$select
-            ->select(spec: SelectSpec::COUNT)
-            ->count()
-            ->from("languages")
-            ->getResult(CountModel::class);
-        return $result->count;
-    }
-
-    // ============================================= Publishers =================================================
-
-    public function fetchAllPublishers(int $page, int $limit) : array
-    {
-        $offset = ($page - 1) * $limit;
-        return $this->database::$select
-            ->select(array(['cols'=> 'name']))
-            ->from("publisher")
-            ->limit($limit, $offset)
-            ->getResults(PublisherModel::class);
-    }
-
-    public function fetchAvailableBooksByPublisher(string $publisher, int $page, int $limit) : array
-    {
-        $wherePublisher = $this->database->createParams(cols:["name"], values:[$publisher], operators:["="]);
-        $foundPublisher = $this->database::$select
-            ->select()
-            ->from("publisher")
-            ->where($wherePublisher)
-            ->getResult(PublisherModel::class);
-
-        $whereParams = $this->database->createParams(cols:["publisher.id"], alias:["publisherId"], values:[$foundPublisher->id], operators:["="]);
-
-        $filteredResults = $this->fetchAvailableByPageWhere($whereParams, $page, $limit);
-
-        return $filteredResults;
-    }
-
-    public function getAvailableBooksCountByPublisher(string $publisher) : int
-    {
-        $wherePublisher = $this->database->createParams(cols:["name"], values: [$publisher], operators: ["="]);
-
-        $foundPublisher = $this->database::$select
-            ->select()
-            ->from("publisher")
-            ->where($wherePublisher)
-            ->getResult(PublisherModel::class);
-
-        $whereParams = $this->database->createParams(
-            cols:["book.available", "book.publisher_id"],
-            alias: ["available", "publisherId"],
-            values: ["1", $foundPublisher->id],
-            operators: ["=", "="]
-        );
-
-        $result = $this->database::$select
-            ->select(spec: SelectSpec::COUNT)
-            ->count()
-            ->from("book")
-            ->where($whereParams)
-            ->getResult(CountModel::class);
-
-        return $result->count;
-    }
-
-    public function fetchBooksByPublisher(string $publisher) : array
-    {
-        $wherePublisher = $this->database->createParams(cols: ["name"], values:[$publisher], operators:["="]);
-        $foundPublisher = $this->database::$select
-            ->select()
-            ->from("publisher")
-            ->where($wherePublisher)
-            ->getResult(PublisherModel::class);
-
-        $whereParams = $this->database->createParams(cols:["publisher_id"], alias: ["publisherId"], values:[$foundPublisher->id], operators:["="]);
-        $filteredResults = $this->getBooksWhere($whereParams);
-
-        return $filteredResults;
-    }
-
-    public function getPublishersCount() : int
-    {
-        $result = $this->database::$select
-            ->select(spec: SelectSpec::COUNT)
-            ->count()
-            ->from("publisher")
-            ->getResult(CountModel::class);
-
-        return $result->count;
-    }
-
-    // ============================================= All Books =================================================
-    public function getAvailableBooksCount() : int
-    {
-        $whereParams = $this->database->createParams(cols: ["available"], values: ["1"], operators: ["="]);
-        $result = $this->database::$select
-            ->select(spec: SelectSpec::COUNT)
-            ->count()
-            ->from("book")
-            ->where($whereParams)
-            ->getResult(CountModel::class);
-
-        return $result->count;
-    }
-
-    public function fetchBookByName(string $title) : null|BookDetailsDTO
-    {
-        $whereBook = $this->database->createParams(cols:['book.title'], alias:['bookTitle'], values:[$title], operators:["="]);
-
-        $selectParams = $this->database->createSelectParams(
-            cols:[
-                'book.id',
-                'book.title',
-                'book.year_published',
-                'book.available',
-                'publisher.name',
-                'author.name',
-                'genres.name',
-                'languages.name'
-            ],
-            alias: [
-                'book_id',
-                'book_title',
-                'year_published',
-                'book_available',
-                'publisher',
-                'book_author',
-                'book_genres',
-                'book_languages'
-            ]
-        );
-
-        $result = $this->database::$select
-            ->select($selectParams)
-            ->from("book")
-            ->innerJoin("publisher", "book.publisher_id = publisher.id")
-
-            ->innerJoin("book_author", "book.id = book_author.book_id")
-            ->innerJoin("author", "book_author.author_id = author.id")
-
-            ->innerJoin("book_genres", "book.id = book_genres.book_id")
-            ->innerJoin("genres", "book_genres.genres_id = genres.id")
-
-            ->innerJoin("book_languages", "book.id = book_languages.book_id")
-            ->innerJoin("languages", "book_languages.languages_id = languages.id")
-
-            ->where($whereBook)
-            ->getResult(BookDetailsDTO::class);
-
-        return $result;
-    }
-
-    public function fetchBookById(int $id) : null|BookDetailsDTO
-    {
-        $whereBook = $this->database->createParams(cols: ['book.id'], alias:['book_id'], values:[$id], operators:['=']);
-
-        $result = $this->getBookWhere($whereBook);
-        if(!empty($result))
-        {
-            return $result;
-        }
-
-        return null;
-    }
-
-
-
-    // ============================================= General =================================================
-
-    public function fetchAvailableByPageWhere(array $inWhereParams, int $page, int $limit) : array
-    {
-        $whereAvailable = $this->database->createParams(cols: ['available'], values:['1'], operators:['=']);
-        $whereParams = array_merge($inWhereParams, $whereAvailable);
-
-        $offset = ($page - 1) * $limit;
-
-        $selectParams = $this->database->createSelectParams(
-            cols: [
-                'book.id',
-                'book.title',
-                'book.year_published',
-                'book.available',
-                'book.cover_name',
-                'publisher.name',
-                'author.name',
-                'genres.name',
-                'languages.name',
-            ],
-            alias: [
-                'book_id',
-                'book_title',
-                'year_published',
-                'book_available',
-                'book_cover_name',
-                'publisher',
-                'book_author',
-                'book_genres',
-                'book_languages'
-            ]
-        );
-
-        $results = $this->database::$select
-            ->select($selectParams)
-            ->from("book")
-            ->innerJoin("publisher", "book.publisher_id = publisher.id")
-
-            ->innerJoin("book_author", "book.id = book_author.book_id")
-            ->innerJoin("author", "book_author.author_id = author.id")
-
-            ->innerJoin("book_genres", "book.id = book_genres.book_id")
-            ->innerJoin("genres", "book_genres.genres_id = genres.id")
-
-            ->innerJoin("book_languages", "book.id = book_languages.book_id")
-            ->innerJoin("languages", "book_languages.languages_id = languages.id")
-            ->where($whereParams)
             ->orderBy(['book.id'])
             ->limit($limit, $offset)
             ->getResults(BookDetailsDTO::class);

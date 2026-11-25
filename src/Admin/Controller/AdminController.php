@@ -58,22 +58,38 @@ class AdminController extends BaseAdminController
         return $imageName;
     }
 
+    //================================ Navigation ================================
     public function displayAllAuthors() : void
     {
-        $page = @(int)($_GET['page']) ?? 1;
+        $page = @($_GET['page']) ?? 1;
         $author = @(string)($_GET['author']) ?? "";
         if(!empty($author))
         {
-            $results = $this->bookRepository->fetchBooksByAuthor($author);
-
-            $this->render("../templates/authorsTable", [
-                'page' => $page,
-                'author' => $author,
-                'results' => $results
-            ]);
+            $this->displayBooksByAuthor($author, $page, RESULTS_DISPLAYED_ON_PAGE);
+            return;
         }
 
         parent::displayAllAuthors();
+    }
+
+    public function displayBooksByAuthor(string $author, int $page, int $limit) : void
+    {
+        $entriesCount = $this->bookRepository->getAllBooksCountByAuthor($author);
+        $totalPages = ceil($entriesCount / RESULTS_DISPLAYED_ON_PAGE);
+
+        $paginationArray = StaticHelpers::createPaginationParams($page, $totalPages, [
+            'previousHref'=> "/admin/authors?" . http_build_query(['author' => $author ,'page' => max(1, $page - 1)]),
+            'nextHref' => "/admin/authors?" . http_build_query(['author' => $author,'page' => min($page + 1, $totalPages)])
+        ]);
+        $results = $this->bookRepository->fetchBooksByAuthor($author, $page, $limit);
+
+        $this->render("../templates/authorsTable",array_merge(
+            $paginationArray,
+            array(
+                'author' => $author,
+                'results' => $results
+            )
+        ));
     }
 
     public function displayAllGenres() : void
@@ -84,6 +100,7 @@ class AdminController extends BaseAdminController
         if(!empty($genre))
         {
             $this->displayBooksByGenre($genre, $page, RESULTS_DISPLAYED_ON_PAGE);
+            return;
         }
 
         parent::displayAllGenres();
@@ -91,14 +108,14 @@ class AdminController extends BaseAdminController
 
     public function displayBooksByGenre(string $genre, int $page, int $limit) : void
     {
-        $entriesCount = $this->bookRepository->getAvailableBooksCountByGenre($genre);
+        $entriesCount = $this->bookRepository->getAllBooksCountByGenre($genre);
         $totalPages = ceil($entriesCount / RESULTS_DISPLAYED_ON_PAGE);
 
         $paginationArray = StaticHelpers::createPaginationParams($page, $totalPages, [
-            'previousHref'=> "genres?" . http_build_query(['genre' => $genre ,'page' => max(1, $page - 1)]),
-            'nextHref' => "genres?" . http_build_query(['genre' => $genre,'page' => min($page + 1, $totalPages)])
+            'previousHref'=> "/admin/genres?" . http_build_query(['genre' => $genre ,'page' => max(1, $page - 1)]),
+            'nextHref' => "/admin/genres?" . http_build_query(['genre' => $genre,'page' => min($page + 1, $totalPages)])
         ]);
-        $results = $this->bookRepository->fetchBooksByGenre($genre);
+        $results = $this->bookRepository->fetchBooksByGenre($genre, $page, $limit);
 
         $this->render("../templates/genresTable",array_merge(
             $paginationArray,
@@ -111,52 +128,92 @@ class AdminController extends BaseAdminController
 
     public function displayAllLanguages() : void
     {
-        $page = @(int)($_GET['page']) ?? 1;
+        $page = @($_GET['page']) ?? 1;
         $language = @(string)($_GET['language']) ?? "";
 
         if(!empty($language))
         {
-            $results = $this->bookRepository->fetchBooksByLanguage($language);
-
-            $this->render("../templates/languagesTable",[
-                'page' => $page,
-                'language' => $language,
-                'results' => $results
-            ]);
+            $this->displayBooksByLanguage($language, $page, RESULTS_DISPLAYED_ON_PAGE);
         }
 
         parent::displayAllLanguages();
     }
 
+    public function displayBooksByLanguage(string $language, int $page, int $limit) : void
+    {
+        $entriesCount = $this->bookRepository->getAllBooksCountByLanguage($language);
+        $totalPages = ceil($entriesCount / RESULTS_DISPLAYED_ON_PAGE);
+
+        $paginationArray = StaticHelpers::createPaginationParams($page, $totalPages, [
+            'previousHref'=> "/admin/languages?" . http_build_query(['language' => $language ,'page' => max(1, $page - 1)]),
+            'nextHref' => "/admin/languages?" . http_build_query(['language' => $language,'page' => min($page + 1, $totalPages)])
+        ]);
+        $results = $this->bookRepository->fetchBooksByLanguage($language, $page, $limit);
+
+        $this->render("../templates/languagesTable",array_merge(
+            $paginationArray,
+            array(
+                'language' => $language,
+                'results' => $results
+            )
+        ));
+    }
+
     public function displayAllPublishers() : void
     {
-        $page = @(int)($_GET['page']) ?? 1;
+        $page = @($_GET['page']) ?? 1;
         $publisher = @(string)($_GET['publisher']) ?? "";
 
         if(!empty($publisher))
         {
-            $results = $this->bookRepository->fetchBooksByPublisher($publisher);
-
-            $this->render("../templates/publishersTable",[
-                'page' => $page,
-                'publisher' => $publisher,
-                'results' => $results
-            ]);
+            $this->displayBooksByPublisher($publisher, $page, RESULTS_DISPLAYED_ON_PAGE);
+            return;
         }
 
         parent::displayAllPublishers();
     }
 
+    public function displayBooksByPublisher(string $publisher, int $page, int $limit) : void
+    {
+        $entriesCount = $this->bookRepository->getAllBooksCountByPublisher($publisher);
+        $totalPages = ceil($entriesCount / RESULTS_DISPLAYED_ON_PAGE);
+
+        $paginationArray = StaticHelpers::createPaginationParams($page, $totalPages, [
+            'previousHref'=> "/admin/publishers?" . http_build_query(['publisher' => $publisher ,'page' => max(1, $page - 1)]),
+            'nextHref' => "/admin/publishers?" . http_build_query(['publisher' => $publisher,'page' => min($page + 1, $totalPages)])
+        ]);
+        $results = $this->bookRepository->fetchBooksByPublisher($publisher, $page, $limit);
+
+        $this->render("../templates/publishersTable",array_merge(
+            $paginationArray,
+            array(
+                'publisher' => $publisher,
+                'results' => $results
+            )
+        ));
+    }
+
+    //================================ Admin Functionality ================================
+
     public function displayAdminDashboard() : void
     {
-        $page = empty($_GET['page']) ? 1 : @(int)($_GET['page']);
+        $page = @($_GET['page']) ?? 1;
+        $entriesCount = $this->bookRepository->getAllBooksCount();
+        $totalPages = ceil($entriesCount / RESULTS_DISPLAYED_ON_PAGE);
 
-        $results = $this->bookRepository->fetchByPage($page, RESULTS_DISPLAYED_ON_PAGE);
+        $results = $this->bookRepository->fetchAllByPage($page, RESULTS_DISPLAYED_ON_PAGE);
 
-        $this->render("pages/index", [
-            'page' => $page,
-            'results' => $results,
+        $paginationArray = StaticHelpers::createPaginationParams($page, $totalPages, [
+            'previousHref'=> "/admin?" . http_build_query(['page' => max(1, $page - 1)]),
+            'nextHref' => "/admin?" . http_build_query(['page' => min($page + 1, $totalPages)])
         ]);
+
+        $this->render("pages/index", array_merge(
+                $paginationArray,
+                array(
+                    'results' => $results,
+                )
+            ));
     }
 
     public function deleteBookEntryById() : void
@@ -206,6 +263,7 @@ class AdminController extends BaseAdminController
         ]);
     }
 
+
     public function editBookEntry() : void
     {
         $id = @(int)($_GET['book_id'] ?? 1);
@@ -235,6 +293,8 @@ class AdminController extends BaseAdminController
         }
 
         $result = $this->bookRepository->fetchBookById($id);
+
+        // These are used to populate the select fields
         $authors = $this->bookRepository->fetchAllAuthors();
         $genres = $this->bookRepository->fetchAllGenres();
         $languages = $this->bookRepository->fetchAllLanguages();

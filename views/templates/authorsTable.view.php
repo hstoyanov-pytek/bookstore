@@ -1,5 +1,5 @@
-<h3>Editing author: <?php echo e($author);?></h3>
-
+<!--<h3>Editing author: --><?php //echo e($author);?><!--&#9;<a href="/--><?php //echo e($_SESSION['role']); ?><!--/edit?--><?php //echo http_build_query(['author'=> $author, 'edit_author'])?><!--">Edit</a></h3>-->
+<h3>Editing author: </h3> <?php require_once $_SERVER['DOCUMENT_ROOT'] . "/views/templates/editFilter.view.php"?>
 
 <table>
     <tr>
@@ -33,8 +33,4 @@
     <?php endforeach; ?>
 </table>
 
-<?php if($page > 1) : ?>
-    <a href="authors?<?php echo http_build_query(['author'=> $author, 'page'=> max(1, $page - 1) ]) ?>">Previous</a>
-<?php endif;?>
-<a href="authors?<?php echo http_build_query(['author'=> $author, 'page'=> $page + 1 ]) ?>">Next</a>
-
+<?php require_once $_SERVER['DOCUMENT_ROOT'] . PAGINATION_PATH; ?>

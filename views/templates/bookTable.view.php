@@ -29,7 +29,4 @@
     </tr>
 <?php endforeach; ?>
 </table>
-<?php if($page > 1) : ?>
-    <a href="<?php echo e($_SESSION['role']); ?>?<?php echo http_build_query(['page'=> max(1, $page - 1)]) ?>">Previous</a>
-<?php endif;?>
-    <a href="<?php echo e($_SESSION['role']); ?>?<?php echo http_build_query(['page'=> $page + 1]) ?>">Next</a>
+<?php require_once $_SERVER['DOCUMENT_ROOT'] . PAGINATION_PATH; ?>

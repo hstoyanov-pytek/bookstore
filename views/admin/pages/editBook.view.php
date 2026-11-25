@@ -11,7 +11,6 @@
             <option value="<?php echo e($publisher->name);?>" <?php echo $publisher->name === $result->publisher ? e("selected") : "";?>> <?php echo e($publisher->name);?></option>
         <?php endforeach; ?>
     </select>
-<!--    <input type="text" id="publisher" name="publisher" value="--><?php //echo e($result->publisher);?><!--"/>-->
 
     <label for="year_published">Year published: </label>
     <input type="text" id="year_published" name="year_published" value="<?php echo e($result->year_published); ?>"/>
