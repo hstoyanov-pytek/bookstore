@@ -71,7 +71,6 @@ if(!$authServices->isLoggedIn())
     $_SESSION['role'] = "user";
 }
 
-var_dump($_SESSION);
 $pagesController = $container->get("pagesController");
 $gatewayController = $container->get("gatewayController");
 $adminController = $container->get("adminController");
@@ -116,6 +115,10 @@ if($authServices->isLoggedIn() && ($_SESSION['role'] === "admin" || $_SESSION['r
         $router->add("POST", '/admin/users/edit', [$adminController, 'editUser']);
         $router->add("POST", '/admin/users/delete', [$adminController, 'deleteUser']);
     }
+}
+else
+{
+    http_response_code(404);
 }
 
 
