@@ -71,11 +71,11 @@ abstract class BaseController
         $this->render("/../templates/booksGallery",
             array_merge(
                 $paginationArray,
-                [
+                array(
                     'filter' => 'author',
                     'name' => $author,
                     'results' => $results
-                ]
+                )
             ));
     }
 
@@ -121,29 +121,111 @@ abstract class BaseController
         $this->render("/../templates/booksGallery",
         array_merge(
             $paginationArray,
-            [
+            array(
                 'filter' => 'genre',
                 'name' => $genre,
                 'results' => $results
-            ]
+            )
         ));
     }
 
     public function displayAllLanguages() : void
     {
-        $languages = $this->bookRepository->fetchAllLanguages();
-        $this->displayNavigation("languages", [
-            'languages' => $languages
+        $language = @(string)($_GET['language']) ?? "";
+        $page = @($_GET['page']) ?? 1;
+        $entriesCount = $this->bookRepository->getLanguagesCount();
+        $totalPages = ceil($entriesCount / RESULTS_DISPLAYED_ON_PAGE);
+
+        if(!empty($language))
+        {
+            $this->displayBooksByLanguage($language, $page, RESULTS_DISPLAYED_ON_PAGE);
+            die();
+        }
+
+        $languages = $this->bookRepository->fetchAllLanguages($page, RESULTS_DISPLAYED_ON_PAGE);
+
+        $paginationArray = StaticHelpers::createPaginationParams($page, $totalPages,
+            [
+                'previousHref' => "/languages?" . http_build_query(['page' => max(1, $page - 1)]),
+                'nextHref' =>  "/languages?" . http_build_query(['page' => min($page + 1, $totalPages)])
+            ]);
+
+        $this->displayNavigation("languages", array_merge(
+            $paginationArray,
+            array(
+                'languages' => $languages
+            )
+        ));
+    }
+
+    public function displayBooksByLanguage(string $language, int $page, int $limit) : void
+    {
+        $entriesCount = $this->bookRepository->getAvailableBooksCountByLanguage($language);
+        $totalPages = ceil($entriesCount / RESULTS_DISPLAYED_ON_PAGE);
+        $results = $this->bookRepository->fetchAvailableBooksByLanguage($language, $page, $limit);
+
+        $paginationArray = StaticHelpers::createPaginationParams($page, $totalPages, [
+            'previousHref' => "/languages?" . http_build_query(['page' => max(1, $page - 1), 'language' => $language]),
+            'nextHref' =>  "/languages?" . http_build_query(['page' => min($page + 1, $totalPages), 'language' => $language])
         ]);
+
+        $this->render("../templates/booksGallery", array_merge(
+            $paginationArray,
+            array(
+                'filter' => 'language',
+                'name' => $language,
+                'results' => $results
+            )
+        ));
     }
 
     public function displayAllPublishers() : void
     {
-        $publishers = $this->bookRepository->fetchAllPublishers();
-        $this->displayNavigation("publishers", [
-            'publishers' => $publishers
-        ]);
+        $publisher = @(string)($_GET['publisher']) ?? "";
+        $page = @($_GET['page']) ?? 1;
+        $entriesCount = $this->bookRepository->getPublishersCount();
+        $totalPages = ceil($entriesCount / RESULTS_DISPLAYED_ON_PAGE);
+
+        if(!empty($publisher))
+        {
+            $this->displayBooksByPublisher($publisher, $page, RESULTS_DISPLAYED_ON_PAGE);
+            die();
+        }
+
+        $publishers = $this->bookRepository->fetchAllPublishers($page, RESULTS_DISPLAYED_ON_PAGE);
+
+        $paginationArray = StaticHelpers::createPaginationParams($page, $totalPages,
+            [
+                'previousHref' => "/publishers?" . http_build_query(['page' => max(1, $page - 1)]),
+                'nextHref' =>  "/publishers?" . http_build_query(['page' => min($page + 1, $totalPages)])
+            ]);
+
+        $this->displayNavigation("publishers", array_merge(
+            $paginationArray,
+            array(
+                'publishers' => $publishers
+            )
+        ));
     }
 
+    public function displayBooksByPublisher(string $publisher, int $page, int $limit) : void
+    {
+        $entriesCount = $this->bookRepository->getAvailableBooksCountByPublisher($publisher);
+        $totalPages = ceil($entriesCount / RESULTS_DISPLAYED_ON_PAGE);
+        $results = $this->bookRepository->fetchAvailableBooksByPublisher($publisher, $page, $limit);
 
+        $paginationArray = StaticHelpers::createPaginationParams($page, $totalPages, [
+            'previousHref' => "/publishers?" . http_build_query(['page' => max(1, $page - 1), 'publisher' => $publisher]),
+            'nextHref' =>  "/publishers?" . http_build_query(['page' => min($page + 1, $totalPages), 'publisher' => $publisher])
+        ]);
+
+        $this->render("../templates/booksGallery", array_merge(
+            $paginationArray,
+            array(
+                'filter' => 'publisher',
+                'name' => $publisher,
+                'results' => $results
+            )
+        ));
+    }
 }

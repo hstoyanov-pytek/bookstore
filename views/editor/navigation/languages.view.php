@@ -2,6 +2,7 @@
 
 <ul>
     <?php foreach ($languages as $language):?>
-        <li><?php echo e($language->name);?></li>
+        <li><a href="/editor/languages?<?php echo http_build_query(['language' => $language->name]);?>"><?php echo e($language->name);?></a></li>
     <?php endforeach; ?>
 </ul>
+<?php require_once $_SERVER['DOCUMENT_ROOT'] . PAGINATION_PATH; ?>

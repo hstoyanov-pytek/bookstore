@@ -1,7 +1,9 @@
-<h1> admin/ Authors: </h1>
+<h1> Authors: </h1>
 
 <ul>
     <?php foreach ($authors as $author):?>
-        <li><a href="/admin/authors?<?php echo http_build_query(['author'=> $author->name]);?>"><?php echo e($author->name);?></a></li>
+        <li><a href="/editor/authors?<?php echo http_build_query(['author'=> $author->name]);?>"><?php echo e($author->name);?></a></li>
     <?php endforeach; ?>
 </ul>
+
+<?php require_once $_SERVER['DOCUMENT_ROOT'] . PAGINATION_PATH; ?>

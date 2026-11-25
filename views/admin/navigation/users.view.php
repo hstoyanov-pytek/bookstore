@@ -21,3 +21,5 @@
     </tr>
     <?php endforeach; ?>
 </table>
+
+<?php require_once $_SERVER['DOCUMENT_ROOT'] . PAGINATION_PATH; ?>
