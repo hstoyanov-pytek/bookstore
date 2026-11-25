@@ -46,7 +46,7 @@ abstract class BaseController
             return;
         }
 
-        $prefix = @$_SESSION['role'] === "user" ? "" : "/" . $_SESSION['role'];
+        $prefix = @$_SESSION['permissions'] < 110  ? "" : "/admin";
 
         $paginationArray = StaticHelpers::createPaginationParams($page, $totalPages,
             [
@@ -66,7 +66,7 @@ abstract class BaseController
         $totalPages = ceil($entriesCount / RESULTS_DISPLAYED_ON_PAGE);
         $results = $this->bookRepository->fetchAvailableBooksByAuthor($author, $page, $limit);
 
-        $prefix = @$_SESSION['role'] === "user" ? "" : "/" . $_SESSION['role'];
+       $prefix = @$_SESSION['permissions'] < 110  ? "" : "/admin";
 
         $paginationArray = StaticHelpers::createPaginationParams($page, $totalPages, [
             'previousHref' => $prefix . "/authors?" . http_build_query(['page' => max(1, $page - 1), 'author' => $author]),
@@ -98,7 +98,7 @@ abstract class BaseController
         }
         $genres = $this->bookRepository->fetchAllGenresByPage($page, RESULTS_DISPLAYED_ON_PAGE);
 
-        $prefix = @$_SESSION['role'] === "user" ? "" : "/" . $_SESSION['role'];
+       $prefix = @$_SESSION['permissions'] < 110  ? "" : "/admin";
 
         $paginationArray = StaticHelpers::createPaginationParams($page, $totalPages,
             [
@@ -119,7 +119,7 @@ abstract class BaseController
         $totalPages = ceil($entriesCount / RESULTS_DISPLAYED_ON_PAGE);
         $results = $this->bookRepository->fetchAvailableBooksByGenre($genre, $page, $limit);
 
-        $prefix = @$_SESSION['role'] === "user" ? "" : "/" . $_SESSION['role'];
+       $prefix = @$_SESSION['permissions'] < 110  ? "" : "/admin";
 
         $paginationArray = StaticHelpers::createPaginationParams($page, $totalPages, [
             'previousHref' => $prefix . "/genres?" . http_build_query(['page' => max(1, $page - 1), 'genre' => $genre]),
@@ -152,7 +152,7 @@ abstract class BaseController
 
         $languages = $this->bookRepository->fetchAllLanguagesByPage($page, RESULTS_DISPLAYED_ON_PAGE);
 
-        $prefix = @$_SESSION['role'] === "user" ? "" : "/" . $_SESSION['role'];
+       $prefix = @$_SESSION['permissions'] < 110  ? "" : "/admin";
 
         $paginationArray = StaticHelpers::createPaginationParams($page, $totalPages,
             [
@@ -175,7 +175,7 @@ abstract class BaseController
 
         $results = $this->bookRepository->fetchAvailableBooksByLanguage($language, $page, $limit);
 
-        $prefix = @$_SESSION['role'] === "user" ? "" : "/" . $_SESSION['role'];
+       $prefix = @$_SESSION['permissions'] < 110  ? "" : "/admin";
 
         $paginationArray = StaticHelpers::createPaginationParams($page, $totalPages, [
             'previousHref' => $prefix . "/languages?" . http_build_query(['page' => max(1, $page - 1), 'language' => $language]),
@@ -207,7 +207,7 @@ abstract class BaseController
 
         $publishers = $this->bookRepository->fetchAllPublishersByPage($page, RESULTS_DISPLAYED_ON_PAGE);
 
-        $prefix = @$_SESSION['role'] === "user" ? "" : "/" . $_SESSION['role'];
+       $prefix = @$_SESSION['permissions'] < 110  ? "" : "/admin";
 
         $paginationArray = StaticHelpers::createPaginationParams($page, $totalPages,
             [
@@ -229,7 +229,7 @@ abstract class BaseController
         $totalPages = ceil($entriesCount / RESULTS_DISPLAYED_ON_PAGE);
         $results = $this->bookRepository->fetchAvailableBooksByPublisher($publisher, $page, $limit);
 
-        $prefix = @$_SESSION['role'] === "user" ? "" : "/" . $_SESSION['role'];
+       $prefix = @$_SESSION['permissions'] < 110  ? "" : "/admin";
 
         $paginationArray = StaticHelpers::createPaginationParams($page, $totalPages, [
             'previousHref' => $prefix . "/publishers?" . http_build_query(['page' => max(1, $page - 1), 'publisher' => $publisher]),

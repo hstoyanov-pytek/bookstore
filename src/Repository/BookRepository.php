@@ -220,8 +220,12 @@ class BookRepository
             ['col' => 'year_published', 'value' => $detailsDTO->year_published],
             ['col' => 'available', 'value' => (int)$detailsDTO->book_available],
             ['col' => 'publisher_id', 'value'=>$publisherResult->id],
-            ['col' => 'cover_name', 'value'=>empty($detailsDTO->book_cover_name) ? BOOK_COVER_DEFAULT : $detailsDTO->book_cover_name]
         );
+
+        if(!empty($detailsDTO->book_cover_name))
+        {
+            $bookCols[] = ['col' => 'cover_name', 'value'=> $detailsDTO->book_cover_name];
+        }
 
         $this->database::$update
             ->update("book")

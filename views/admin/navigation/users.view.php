@@ -13,7 +13,7 @@
         <td><?php echo e($result->user_role);?></td>
         <td><a href="/admin/users/edit?<?php echo http_build_query(['id' => $result->user_id]);?>"> Edit </a></td>
         <td>
-            <form method="POST" action="/<?php echo e($_SESSION['role']); ?>/users/delete">
+            <form method="POST" action="/admin/users/delete">
                 <input type="hidden" name="id" value="<?php echo e($result->user_id);?>"/>
                 <input type="submit" value="Delete">
             </form>

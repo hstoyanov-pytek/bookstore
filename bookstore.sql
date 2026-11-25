@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Nov 20, 2026 at 12:46 PM
--- Server version: 11.8.6-MariaDB-0+deb13u1 from Debian
--- PHP Version: 8.4.27
+-- Generation Time: Nov 25, 2026 at 01:55 PM
+-- Server version: 11.8.9-MariaDB-0+deb13u1 from Debian
+-- PHP Version: 8.4.28
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -74,17 +74,17 @@ CREATE TABLE `book` (
 --
 
 INSERT INTO `book` (`id`, `title`, `publisher_id`, `year_published`, `cover_name`, `available`) VALUES
-(82, 'Animal Farms', 24, '2026-11-28', 'stronk-1795100339.jpg', 1),
-(83, 'Nineteen Eighty-Four', 23, '2026-11-22', 'default.jpeg', 0),
+(82, 'Animal Farms', 34, '2026-11-28', 'HilariousCatMemes55-1795614415.jpg', 1),
+(83, 'Nineteen Eighty-Four', 23, '2026-11-22', 'default.jpeg', 1),
 (84, 'A Clergyman\'s Daughter', 22, '2026-11-12', 'default.jpeg', 0),
-(85, 'Pride and Prejudice', 22, '2026-10-30', 'images1-1795101836.jpg', 1),
-(86, 'The Count of Monte Cristo', 23, '2026-11-14', 'default.jpeg', 0),
-(87, 'Funny cat', 24, '2026-11-29', 'images-1795090493.jpg', 0),
+(85, 'Pride and Prejudice', 22, '2026-10-30', 'default.jpeg', 1),
+(86, 'The Count of Monte Cristo', 23, '2026-11-14', 'images-1795614404.jpg', 1),
+(87, 'Funny cat', 21, '2026-11-29', 'catmemewhitecatmeme-1795614715.jpg', 1),
 (88, 'Fahrenheit 451', 21, '2026-10-28', 'default.jpeg', 0),
 (89, 'mnbm', 22, '2026-11-29', 'default.jpeg', 0),
 (90, 'NEw Book', 22, '2026-11-07', 'images1-1795100422.jpg', 1),
-(91, 'New funny cat book', 26, '2026-11-05', 'default.jpeg', 0),
-(92, 'Testing CoNST', 22, '2026-12-31', 'default.jpeg', 0),
+(91, 'New funny cat book', 26, '2026-11-05', 'stronk-1795614741.jpg', 1),
+(92, 'Testing CoNST', 22, '2026-12-31', 'default.jpeg', 1),
 (93, 'Const test2', 27, '2026-12-31', 'default.jpeg', 1),
 (94, 'TEST 3 Boom', 28, '2026-01-31', 'default.jpeg', 1),
 (95, 'CMON', 29, '2026-01-01', 'default.jpeg', 1),
@@ -115,7 +115,7 @@ INSERT INTO `book_author` (`book_id`, `author_id`) VALUES
 (84, 7),
 (85, 8),
 (86, 9),
-(87, 10),
+(87, 20),
 (88, 11),
 (89, 12),
 (90, 13),
@@ -150,8 +150,8 @@ INSERT INTO `book_genres` (`book_id`, `genres_id`) VALUES
 (83, 1),
 (84, 1),
 (85, 16),
-(86, 13),
-(87, 17),
+(86, 4),
+(87, 2),
 (88, 20),
 (89, 19),
 (90, 16),
@@ -187,7 +187,7 @@ INSERT INTO `book_languages` (`book_id`, `languages_id`) VALUES
 (84, 1),
 (85, 1),
 (86, 1),
-(87, 12),
+(87, 1),
 (88, 12),
 (89, 3),
 (90, 7),
@@ -322,17 +322,18 @@ INSERT INTO `publisher` (`id`, `name`) VALUES
 
 CREATE TABLE `roles` (
   `id` int(11) NOT NULL,
-  `name` varchar(255) NOT NULL
+  `name` varchar(255) NOT NULL,
+  `rwd` int(3) NOT NULL COMMENT 'Integer representation of the boolean states for Read/Write/Delete permission structure\r\n'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `roles`
 --
 
-INSERT INTO `roles` (`id`, `name`) VALUES
-(1, 'admin'),
-(2, 'user'),
-(3, 'editor');
+INSERT INTO `roles` (`id`, `name`, `rwd`) VALUES
+(1, 'admin', 111),
+(2, 'user', 100),
+(3, 'editor', 110);
 
 -- --------------------------------------------------------
 
@@ -352,8 +353,9 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `email`, `name`, `password`) VALUES
-(1, 'admin@pytek.bg', 'Hristo', '$2y$10$Yw5IommDjhCYwatdCVVevuiCUfL3afol4Mck36tqDeH2iKHpWPC2m'),
-(4, 'kim@bookstore.com', 'Kimberly', '$2y$12$qz7i0hk9mc7rjwNREZIGeub0BWdEehmBwmRvt13.TBAoKmaz1uqd.');
+(4, 'kim@bookstore.com', 'Kimberly', '$2y$12$qz7i0hk9mc7rjwNREZIGeub0BWdEehmBwmRvt13.TBAoKmaz1uqd.'),
+(7, 'admin@pytek.bg', 'Hristo', '$2y$12$SVZOK.Vbtr1XZjfvdhmnveQEE84KdXSQC7qwdK5bJR8NF9TInFj2u'),
+(9, 'editor@pytek.bg', 'Goshko', '$2y$12$30t.VL6hoFamUnG/xrSdC.Wjzq2Goh8YNi5BfAX0anJmbFr3IQIiW');
 
 -- --------------------------------------------------------
 
@@ -371,8 +373,9 @@ CREATE TABLE `users_roles` (
 --
 
 INSERT INTO `users_roles` (`users_id`, `roles_id`) VALUES
-(1, 1),
-(4, 2);
+(4, 3),
+(7, 1),
+(9, 3);
 
 --
 -- Indexes for dumped tables
@@ -493,7 +496,7 @@ ALTER TABLE `roles`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- Constraints for dumped tables

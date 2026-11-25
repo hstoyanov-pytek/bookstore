@@ -31,7 +31,7 @@ class GatewayController extends BaseGatewayController
                 match($role)
                 {
                     'admin' => header("Location: /admin"),
-                    'editor'=> header("Location: /editor"),
+                    'editor'=> header("Location: /admin"),
                     default => header("Location: /") // covering both user and whatever shady role shows up
                 };
 

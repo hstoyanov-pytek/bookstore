@@ -69,19 +69,6 @@ class Insert extends BaseQuery
         }
         $this->queryString .= ") ";
 
-//        /// TODO BINDINGS!!!
-//        if(is_string($values))
-//        {
-//            $this->valueArgs = count(explode(",", $values));
-//            if($this->columnArgs !== $this->valueArgs)
-//            {
-//                throw new \Exception("Number of columns and values mismatch when calling INSERT::VALUES");
-//            }
-//
-//            $this->queryString .= "({$values})";
-//            return $this;
-//        }
-
         if(is_array($values))
         {
             $this->valueArgs = count($values);

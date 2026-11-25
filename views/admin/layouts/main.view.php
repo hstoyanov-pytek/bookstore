@@ -17,7 +17,9 @@
                 <a href="/admin/genres">Genres</a>
                 <a href="/admin/languages">Languages</a>
                 <a href="/admin/publishers">Publishers</a>
-                <a href="/admin/users">Users</a>
+                <?php if($_SESSION['role'] === "admin"): ?>
+                    <a href="/admin/users">Users</a>
+                <?php endif; ?>
             </nav>
             <a href="/logout">Logout</a>
         </header>

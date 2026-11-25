@@ -41,8 +41,7 @@ class Router
 
             if(    $controller instanceof \App\Frontend\Controller\BaseFrontendController
                 || $controller instanceof \App\Gateway\Controller\BaseGatewayController
-                || $controller instanceof \App\Admin\Controller\BaseAdminController
-                || $controller instanceof \App\Editor\Controller\BaseEditorController)
+                || $controller instanceof \App\Admin\Controller\BaseAdminController)
             {
                 $controller->{$function}();
             }

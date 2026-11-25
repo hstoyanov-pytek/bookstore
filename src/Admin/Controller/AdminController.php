@@ -15,13 +15,11 @@ class AdminController extends BaseAdminController
 
     private function validateUploadedImage() : string
     {
-        var_dump($_FILES);
         if(empty($_FILES) && empty($_FILES['cover']))
         {
             return "";
         }
         $file = $_FILES['cover'];
-        var_dump(is_readable($file['tmp_name']));
 
         if(!is_readable($file['tmp_name'])) return "";
 
@@ -263,10 +261,9 @@ class AdminController extends BaseAdminController
         ]);
     }
 
-
     public function editBookEntry() : void
     {
-        $id = @(int)($_GET['book_id'] ?? 1);
+        $id = @($_GET['book_id'] ?? -1);
         if(!empty($_POST))
         {
             $imageName = $this->validateUploadedImage();
@@ -286,9 +283,6 @@ class AdminController extends BaseAdminController
             $details->arrayToObject($values);
             $details->book_id = $id;
             $this->bookRepository->updateById($id, $details);
-
-            /// TODO:: Come up with a solution for the header, to redirect to whatever page we came from if we are
-            /// editing from the navigation
             header("Location: /admin");
         }
 

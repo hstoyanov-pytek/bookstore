@@ -9,6 +9,7 @@ class UserDetailsDTO
     public string $user_password;
     public string $user_name;
     public string $user_role;
+    public int $user_rwd;
 
 
     public function arrayToObject(array $details) : object
@@ -18,6 +19,7 @@ class UserDetailsDTO
         $this->user_password = @(string)$details['user_password'];
         $this->user_name = @(string)$details['user_name'];
         $this->user_role = @(string)$details['user_role'];
+        $this->user_rwd= @(int)$details['user_rwd'];
 
         return $this;
     }
@@ -30,6 +32,7 @@ class UserDetailsDTO
             'user_name' => $this->user_name,
             'user_password' => $this->user_password,
             'user_role' => $this->user_role,
+            'user_rwd' => $this->user_rwd,
         );
     }
 }

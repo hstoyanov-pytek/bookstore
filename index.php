@@ -25,13 +25,6 @@ $container->bind("adminController", function() use($container)
     return new \App\Admin\Controller\AdminController(bookRepository: $bookRepository, userRepository: $userRepository, authService:$authService);
 });
 
-$container->bind("editorController", function() use($container)
-{
-    $bookRepository = $container->get("bookRepository");
-    $authService = $container->get("authService");
-    return new \App\Editor\Controller\EditorController($bookRepository, $authService);
-});
-
 $container->bind("gatewayController", function() use($container)
 {
     $authService = $container->get("authService");
@@ -78,10 +71,10 @@ if(!$authServices->isLoggedIn())
     $_SESSION['role'] = "user";
 }
 
+var_dump($_SESSION);
 $pagesController = $container->get("pagesController");
 $gatewayController = $container->get("gatewayController");
 $adminController = $container->get("adminController");
-$editorController = $container->get("editorController");
 $router = $container->get("router");
 
 $router->add("GET", '', [$pagesController, 'displayLandingPage']);
@@ -98,38 +91,33 @@ $router->add("GET", '/register', [$gatewayController, 'register']);
 $router->add("POST", '/register', [$gatewayController, 'register']);
 $router->add("POST", '/login', [$gatewayController, 'login']);
 
-if($authServices->isLoggedIn() && $_SESSION['role'] === "admin")
+if($authServices->isLoggedIn() && ($_SESSION['role'] === "admin" || $_SESSION['role'] === "editor"))
 {
-    $router->add("GET", '/admin', [$adminController, 'displayAdminDashboard']);
-    $router->add("GET", '/admin/edit', [$adminController, 'editBookEntry']);
-    $router->add("GET", '/admin/create', [$adminController, 'createBookEntry']);
-    $router->add("GET", '/admin/authors', [$adminController, 'displayAllAuthors']);
-    $router->add("GET", '/admin/genres', [$adminController, 'displayAllGenres']);
-    $router->add("GET", '/admin/languages', [$adminController, 'displayAllLanguages']);
-    $router->add("GET", '/admin/publishers', [$adminController, 'displayAllPublishers']);
-    $router->add("GET", '/admin/users', [$adminController, 'displayAllUsers']);
-    $router->add("GET", '/admin/users/edit', [$adminController, 'editUser']);
+    $permissions = $_SESSION['permissions'];
 
-    $router->add("POST", '/admin/users/edit', [$adminController, 'editUser']);
-    $router->add("POST", '/admin/users/delete', [$adminController, 'deleteUser']);
-    $router->add("POST", '/admin/edit', [$adminController, 'editBookEntry']);
-    $router->add("POST", '/admin/delete', [$adminController, 'deleteBookEntryById']);
-    $router->add("POST", '/admin/create', [$adminController, 'createBookEntry']);
+    if($permissions >= 110)
+    {
+        $router->add("GET", '/admin', [$adminController, 'displayAdminDashboard']);
+        $router->add("GET", '/admin/edit', [$adminController, 'editBookEntry']);
+        $router->add("GET", '/admin/create', [$adminController, 'createBookEntry']);
+        $router->add("GET", '/admin/authors', [$adminController, 'displayAllAuthors']);
+        $router->add("GET", '/admin/genres', [$adminController, 'displayAllGenres']);
+        $router->add("GET", '/admin/languages', [$adminController, 'displayAllLanguages']);
+        $router->add("GET", '/admin/publishers', [$adminController, 'displayAllPublishers']);
+        $router->add("POST", '/admin/edit', [$adminController, 'editBookEntry']);
+        $router->add("POST", '/admin/create', [$adminController, 'createBookEntry']);
+    }
+
+    if($_SESSION['permissions'] === 111)
+    {
+        $router->add("POST", '/admin/delete', [$adminController, 'deleteBookEntryById']);
+        $router->add("GET", '/admin/users', [$adminController, 'displayAllUsers']);
+        $router->add("GET", '/admin/users/edit', [$adminController, 'editUser']);
+        $router->add("POST", '/admin/users/edit', [$adminController, 'editUser']);
+        $router->add("POST", '/admin/users/delete', [$adminController, 'deleteUser']);
+    }
 }
-var_dump($_SESSION);
-if($authServices->isLoggedIn() && $_SESSION['role'] === "editor")
-{
-    $router->add("GET", '/editor', [$editorController, 'displayEditorDashboard']);
-    $router->add("GET", '/editor/edit', [$editorController, 'editBookEntry']);
-    $router->add("GET", '/editor/create', [$editorController, 'createBookEntry']);
-    $router->add("GET", '/editor/authors', [$editorController, 'displayAllAuthors']);
-    $router->add("GET", '/editor/genres', [$editorController, 'displayAllGenres']);
-    $router->add("GET", '/editor/languages', [$editorController, 'displayAllLanguages']);
-    $router->add("GET", '/editor/publishers', [$editorController, 'displayAllPublishers']);
-    $router->add("POST", '/editor/edit', [$editorController, 'editBookEntry']);
-    $router->add("POST", '/editor/delete', [$editorController, 'deleteBookEntryById']);
-    $router->add("POST", '/editor/create', [$editorController, 'createBookEntry']);
-}
+
 
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $router->dispatch($path);

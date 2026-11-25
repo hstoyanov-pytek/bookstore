@@ -22,14 +22,16 @@ class AuthService
                 'users.email',
                 'users.password',
                 'users.name',
-                'roles.name'
+                'roles.name',
+                'roles.rwd'
             ],
             alias: [
                 'user_id',
                 'user_email',
                 'user_password',
                 'user_name',
-                'user_role'
+                'user_role',
+                'user_rwd'
             ]
         );
 
@@ -52,6 +54,7 @@ class AuthService
             $this->ensureSessionUnique();
             $_SESSION['role'] = $existingUser->user_role;
             $_SESSION['userId'] = $existingUser->user_id;
+            $_SESSION['permissions'] = $existingUser->user_rwd;
             session_regenerate_id();
             return true;
         }
@@ -64,6 +67,7 @@ class AuthService
         $this->ensureSessionUnique();
         unset($_SESSION['userId']);
         unset($_SESSION['role']);
+        unset($_SESSION['permissions']);
         session_regenerate_id();
     }
 
