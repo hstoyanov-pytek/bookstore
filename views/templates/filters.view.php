@@ -1,4 +1,9 @@
 <form>
+    <input type="submit" value="Filter">
 
-<!--    <input type="checkbox" name="">-->
+    <div id="filter" name="authorFilter">
+    <?php foreach ($authors as $author):?>
+
+    <?php endforeach; ?>
+    </div>
 </form>

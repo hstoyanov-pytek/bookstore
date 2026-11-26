@@ -8,6 +8,7 @@ use \App\Model\GenresModel;
 use \App\Model\LanguagesModel;
 use \App\Model\BookDetailsDTO;
 use \App\Model\CountModel;
+use \App\Model\FilterModel;
 use App\Utilities\Database\SelectSpec;
 
 class BookRepository
@@ -391,6 +392,7 @@ class BookRepository
         $result = $this->database::$select
             ->select(spec: SelectSpec::COUNT)
             ->count()
+            ->addAs()
             ->from("book")
             ->innerJoin("book_genres", "book.id = book_genres.book_id")
             ->where($whereParams)
@@ -418,6 +420,7 @@ class BookRepository
         $result = $this->database::$select
             ->select(spec: SelectSpec::COUNT)
             ->count()
+            ->addAs()
             ->from("book")
             ->innerJoin("book_genres", "book.id = book_genres.book_id")
             ->where($whereParams)
@@ -447,6 +450,7 @@ class BookRepository
         $result = $this->database::$select
             ->select(spec: SelectSpec::COUNT)
             ->count()
+            ->addAs()
             ->from("genres")
             ->getResult(CountModel::class);
 
@@ -508,6 +512,7 @@ class BookRepository
         $result = $this->database::$select
             ->select(spec: SelectSpec::COUNT)
             ->count()
+            ->addAs()
             ->from("book")
             ->innerJoin("book_author", "book.id = book_author.book_id")
             ->where($whereParams)
@@ -535,6 +540,7 @@ class BookRepository
         $result = $this->database::$select
             ->select(spec: SelectSpec::COUNT)
             ->count()
+            ->addAs()
             ->from("book")
             ->innerJoin("book_author", "book.id = book_author.book_id")
             ->where($whereParams)
@@ -564,10 +570,72 @@ class BookRepository
         $result = $this->database::$select
             ->select(spec: SelectSpec::COUNT)
             ->count()
+            ->addAs()
             ->from("author")
             ->getResult(CountModel::class);
 
         return $result->count;
+    }
+
+    /// SELECT author.name as name ,
+    //(SELECT COUNT(*)
+    //FROM book_author
+    //WHERE book_author.author_id = author.id
+    //) as count
+    //FROM author;
+    public function fetchAllBooksByAuthorFilter(): array
+    {
+        $whereParams = $this->database->createParams(
+            cols:['book_author.author_id'],
+            alias:["authorId"],
+            values: ["author.id"],
+            skip: [1],
+            operators:["="]);
+
+        $results = $this->database::$select
+            ->select(array(['cols' => 'author.name', 'alias' => 'name']))
+            ->startSubQuery()
+            ->select(spec:SelectSpec::COUNT)
+            ->count()
+            ->from("book_author")
+            ->where($whereParams)
+            ->endSubQuery()
+            ->addAs("count")
+            ->from("author")
+            ->getResults(FilterModel::class);
+
+        return $results;
+    }
+
+//    /SELECT author.name as name ,
+//    (SELECT COUNT(*)
+//    FROM book_author
+//    INNER JOIN book ON book_author.book_id = book.id
+//    WHERE book_author.author_id = author.id AND book.available = 1
+//    ) as count
+//    FROM author;
+    public function fetchAvailableBooksByAuthorFilter(): array
+    {
+        $whereParams = $this->database->createParams(
+            cols:['book_author.author_id', "book.available"],
+            alias:["authorId", "available"],
+            values: ['author.id', 1],
+            skip: [1, 0],
+            operators:["=", "="]);
+        
+        $results = $this->database::$select
+            ->select(array(['cols' => 'author.name', 'alias' => 'name']))
+            ->startSubQuery()
+            ->select(spec:SelectSpec::COUNT)
+            ->count()
+            ->from("book_author")
+            ->innerJoin("book", "book_author.book_id = book.id")
+            ->where($whereParams)
+            ->endSubQuery()
+            ->addAs("count")
+            ->from("author")
+            ->getResults();
+        return $results;
     }
 
     // ============================================= Languages =================================================
@@ -624,6 +692,7 @@ class BookRepository
         $result = $this->database::$select
             ->select(spec: SelectSpec::COUNT)
             ->count()
+            ->addAs()
             ->from("book")
             ->innerJoin("book_languages", "book.id = book_languages.book_id")
             ->where($whereParams)
@@ -651,6 +720,7 @@ class BookRepository
         $result = $this->database::$select
             ->select(spec: SelectSpec::COUNT)
             ->count()
+            ->addAs()
             ->from("book")
             ->innerJoin("book_languages", "book.id = book_languages.book_id")
             ->where($whereParams)
@@ -680,6 +750,7 @@ class BookRepository
         $result = $this->database::$select
             ->select(spec: SelectSpec::COUNT)
             ->count()
+            ->addAs()
             ->from("languages")
             ->getResult(CountModel::class);
         return $result->count;
@@ -741,6 +812,7 @@ class BookRepository
         $result = $this->database::$select
             ->select(spec: SelectSpec::COUNT)
             ->count()
+            ->addAs()
             ->from("book")
             ->where($whereParams)
             ->getResult(CountModel::class);
@@ -768,6 +840,7 @@ class BookRepository
         $result = $this->database::$select
             ->select(spec: SelectSpec::COUNT)
             ->count()
+            ->addAs()
             ->from("book")
             ->where($whereParams)
             ->getResult(CountModel::class);
@@ -795,6 +868,7 @@ class BookRepository
         $result = $this->database::$select
             ->select(spec: SelectSpec::COUNT)
             ->count()
+            ->addAs()
             ->from("publisher")
             ->getResult(CountModel::class);
 
@@ -808,6 +882,7 @@ class BookRepository
         $result = $this->database::$select
             ->select(spec: SelectSpec::COUNT)
             ->count()
+            ->addAs()
             ->from("book")
             ->where($whereParams)
             ->getResult(CountModel::class);
@@ -820,6 +895,7 @@ class BookRepository
         $result = $this->database::$select
             ->select(spec: SelectSpec::COUNT)
             ->count()
+            ->addAs()
             ->from("book")
             ->getResult(CountModel::class);
 

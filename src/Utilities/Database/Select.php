@@ -20,7 +20,7 @@ class Select extends BaseQuery
         $this->queryString .= "SELECT ";
 
         // if its set to Count/Distinct, return and expect the next call to be the respective function
-        if($spec !== SelectSpec::DEFAULT)
+        if(empty($columns) && $spec !== SelectSpec::DEFAULT)
         {
             return $this;
         }
@@ -164,8 +164,12 @@ class Select extends BaseQuery
 
         $this->queryString .= empty($column) ? "(*)" : "({$column})";
 
-        $this->queryString .= " AS count ";
+        return $this;
+    }
 
+    public function addAS(string $as = "count") : object
+    {
+        $this->queryString .= " AS {$as} ";
         return $this;
     }
 
@@ -184,6 +188,18 @@ class Select extends BaseQuery
                 "{$value}";
         }
 
+        return $this;
+    }
+
+    public function startSubQuery() : object
+    {
+        $this->queryString .= ", (";
+        return $this;
+    }
+
+    public function endSubQuery() : object
+    {
+        $this->queryString .= ")";
         return $this;
     }
 

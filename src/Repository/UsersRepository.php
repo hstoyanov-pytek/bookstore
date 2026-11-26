@@ -18,6 +18,7 @@ class UsersRepository
         $result = $this->database::$select
             ->select(spec: SelectSpec::COUNT)
             ->count()
+            ->addAs()
             ->from("users")
             ->getResult(CountModel::class);
 

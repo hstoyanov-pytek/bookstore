@@ -19,38 +19,39 @@ class Database
     ///
     /// IMPORTANT, When passing alias, make sure to have aliases equal to columns else there will be an argument mismatch
     /// and the function will throw exception
-    public function createParams(array $cols, array $values, array $operators, array $alias = array()) : array
+    public function createParams(array $cols, array $values, array $operators, array $alias = array(), array $skip = array()) : array
     {
         $params = array();
-        if(max(count($cols), count($values), count($alias), count($operators)) !== count($cols))
+        if(max(count($cols), count($values), count($alias), count($skip), count($operators)) !== count($cols))
             throw new \Exception("Mismatch in number of arguments passed in createParams!");
 
         ///
         // $params = array(
         //  ['col' => 'id',
         //  'alias' => 'columnAlias'
+        //  'skip' => '1' or '0'
         //  'value' => '1',
         //  'operator' => '=']
         // );
         ///
         for($i = 0; $i < count($cols); $i++)
         {
-            if(empty($alias))
-            {
-                $params[] = [
+            $params[] = empty($alias) ?
+                [
                     'col' => $cols[$i],
                     'value' => $values[$i],
                     'operator' => $operators[$i]
-                ];
-            }
-            else
-            {
-                $params[] = [
+                ] :
+                [
                     'col' => $cols[$i],
                     'alias' => $alias[$i],
                     'value' => $values[$i],
                     'operator' => $operators[$i]
                 ];
+
+            if(!empty($skip))
+            {
+                $params[$i] = array_merge($params[$i], ['skip'=> $skip[$i]]);
             }
         }
 

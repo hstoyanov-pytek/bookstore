@@ -42,11 +42,18 @@ abstract class BaseQuery
             $this->queryString .= "1";
             return $this;
         }
-
         foreach ($condition as $i => $value)
         {
             if(empty($value['alias']))
             {
+                if(@$value['skip'] === 1)
+                {
+                    $this->queryString .= ($i !== array_key_last($condition)) ?
+                        "{$value['col']} {$value['operator']} {$value['value']} " . ($operator === WhereOp::NOT ? WhereOp::AND->value : $operator->value)
+                : "{$value['col']} {$value['operator']} {$value['value']} ";
+                    continue;
+                }
+
                 $this->queryString .= ($i !== array_key_last($condition)) ?
                     "{$value['col']} {$value['operator']} :{$value['col']} " . ($operator === WhereOp::NOT ? WhereOp::AND->value : $operator->value)
                 : "{$value['col']} {$value['operator']} :{$value['col']} ";
@@ -55,6 +62,14 @@ abstract class BaseQuery
             }
             else
             {
+                if(@$value['skip'] === 1)
+                {
+                    $this->queryString .= ($i !== array_key_last($condition)) ?
+                        "{$value['col']} {$value['operator']} {$value['value']} " . ($operator === WhereOp::NOT ? WhereOp::AND->value : $operator->value)
+                        : "{$value['col']} {$value['operator']} {$value['value']} ";
+                    continue;
+                }
+
                 $this->queryString .= ($i !== array_key_last($condition)) ?
                     "{$value['col']} {$value['operator']} :{$value['alias']} " . ($operator === WhereOp::NOT ? WhereOp::AND->value : $operator->value)
                     : "{$value['col']} {$value['operator']} :{$value['alias']} ";
@@ -62,7 +77,6 @@ abstract class BaseQuery
                 $this->createBinds($value['alias'], $value['value']);
             }
         }
-
         return $this;
     }
 
@@ -87,6 +101,7 @@ abstract class BaseQuery
         {
             $stmt->bindValue($bind['key'], $bind['value'], $bind['type']);
         }
+        
         $stmt->execute();
 
         if(empty($modelClass))

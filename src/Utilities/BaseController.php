@@ -22,7 +22,16 @@ abstract class BaseController
         return true;
     }
 
-    abstract protected function render(string $view, array $params = array()): void;
+    /// IMPORTANT: To be treated as abstract!
+    protected function render(string $view, array $params = array()): void
+    {
+        $filterAuthors = array();
+        $filterPublishers = array();
+        $filterLanguages = array();
+        $filterGenres = array();
+
+        $this->prepareFilters($filterAuthors, $filterLanguages, $filterPublishers, $filterGenres);
+    }
 
     protected function displayPage(string $pageKey, array $params = array()) : void
     {
@@ -244,6 +253,23 @@ abstract class BaseController
                 'results' => $results
             )
         ));
+    }
+
+    private function prepareFilters(array &$authors, array &$languages, array &$publishers, array &$genres)
+    {
+        $authors = $this->bookRepository->fetchAvailableBooksByAuthorFilter();
+
+//        if($_SESSION['permissions'] > 100) // Check if the permissions match the ones for the admin/editor
+//        {
+//            $authors = $this->bookRepository->fetchAllBooksByAuthorFilter();
+//            $languages = $this->bookRepository->fetchAllLanguages();
+//            $publishers = $this->bookRepository->fetchAllPublishers();
+//            $genres = $this->bookRepository->fetchAllGenres();
+//        }
+//        else
+//        {
+//
+//        }
     }
 
     public function processFilters()

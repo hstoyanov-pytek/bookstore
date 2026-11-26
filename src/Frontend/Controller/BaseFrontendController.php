@@ -13,6 +13,8 @@ class BaseFrontendController extends \App\Utilities\BaseController
     #[\Override]
     protected function render(string $view, array $params = array()) : void
     {
+        parent::render($view, $params);
+
         extract($params);
 
         ob_start();
