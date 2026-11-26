@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Nov 25, 2026 at 01:55 PM
+-- Generation Time: Nov 26, 2026 at 08:22 AM
 -- Server version: 11.8.9-MariaDB-0+deb13u1 from Debian
 -- PHP Version: 8.4.28
 
@@ -75,16 +75,16 @@ CREATE TABLE `book` (
 
 INSERT INTO `book` (`id`, `title`, `publisher_id`, `year_published`, `cover_name`, `available`) VALUES
 (82, 'Animal Farms', 34, '2026-11-28', 'HilariousCatMemes55-1795614415.jpg', 1),
-(83, 'Nineteen Eighty-Four', 23, '2026-11-22', 'default.jpeg', 1),
-(84, 'A Clergyman\'s Daughter', 22, '2026-11-12', 'default.jpeg', 0),
-(85, 'Pride and Prejudice', 22, '2026-10-30', 'default.jpeg', 1),
+(83, 'Nineteen Eighty-Four', 23, '2026-11-22', 'hilariouscatsmemesever013212460871-1795681280.jpg', 1),
+(84, 'A Clergyman\'s Daughter', 27, '2026-11-12', 'catcat3002442689-1795681239.jpg', 1),
+(85, 'Pride and Prejudice and hampters', 29, '2026-10-30', 'my4ovs7equf718095958-1795680967.jpg', 1),
 (86, 'The Count of Monte Cristo', 23, '2026-11-14', 'images-1795614404.jpg', 1),
 (87, 'Funny cat', 21, '2026-11-29', 'catmemewhitecatmeme-1795614715.jpg', 1),
 (88, 'Fahrenheit 451', 21, '2026-10-28', 'default.jpeg', 0),
 (89, 'mnbm', 22, '2026-11-29', 'default.jpeg', 0),
 (90, 'NEw Book', 22, '2026-11-07', 'images1-1795100422.jpg', 1),
 (91, 'New funny cat book', 26, '2026-11-05', 'stronk-1795614741.jpg', 1),
-(92, 'Testing CoNST', 22, '2026-12-31', 'default.jpeg', 1),
+(92, 'Testing nav with hampter', 22, '2026-12-31', '6482505151826-1795680096.jpg', 1),
 (93, 'Const test2', 27, '2026-12-31', 'default.jpeg', 1),
 (94, 'TEST 3 Boom', 28, '2026-01-31', 'default.jpeg', 1),
 (95, 'CMON', 29, '2026-01-01', 'default.jpeg', 1),

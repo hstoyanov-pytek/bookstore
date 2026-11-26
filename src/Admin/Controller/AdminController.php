@@ -84,6 +84,7 @@ class AdminController extends BaseAdminController
         $this->render("../templates/authorsTable",array_merge(
             $paginationArray,
             array(
+                'slug' => "authors",
                 'author' => $author,
                 'results' => $results
             )
@@ -118,6 +119,7 @@ class AdminController extends BaseAdminController
         $this->render("../templates/genresTable",array_merge(
             $paginationArray,
             array(
+                'slug' => "genres",
                 'genre' => $genre,
                 'results' => $results
             )
@@ -151,6 +153,7 @@ class AdminController extends BaseAdminController
         $this->render("../templates/languagesTable",array_merge(
             $paginationArray,
             array(
+                'slug' => "languages",
                 'language' => $language,
                 'results' => $results
             )
@@ -185,6 +188,7 @@ class AdminController extends BaseAdminController
         $this->render("../templates/publishersTable",array_merge(
             $paginationArray,
             array(
+                'slug' => "publishers",
                 'publisher' => $publisher,
                 'results' => $results
             )
@@ -264,10 +268,10 @@ class AdminController extends BaseAdminController
     public function editBookEntry() : void
     {
         $id = @($_GET['book_id'] ?? -1);
+        $nav = @($_GET['nav']) ?? "";
         if(!empty($_POST))
         {
             $imageName = $this->validateUploadedImage();
-
             $values = array();
             foreach ($_POST as $name => $var)
             {
@@ -283,7 +287,8 @@ class AdminController extends BaseAdminController
             $details->arrayToObject($values);
             $details->book_id = $id;
             $this->bookRepository->updateById($id, $details);
-            header("Location: /admin");
+
+            empty($nav) ? header("Location: /admin") : header("Location: /admin/". $nav);
         }
 
         $result = $this->bookRepository->fetchBookById($id);
@@ -301,6 +306,7 @@ class AdminController extends BaseAdminController
         }
 
         $this->displayPage("editBook", [
+            'nav' => $nav,
             'result' => $result,
             'authors' => $authors,
             'genres' => $genres,

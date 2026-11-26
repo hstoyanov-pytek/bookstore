@@ -20,12 +20,12 @@
         <td><?php echo e($result->book_genres); ?></td>
         <td><?php echo e($result->book_languages); ?></td>
         <td><?php echo e($result->year_published); ?></td>
-        <td><a href="/admin/edit?<?php echo http_build_query(['book_id' => $result->book_id])?>">Edit</a></td>
+        <td><a href="/admin/edit?<?php echo http_build_query(['book_id' => $result->book_id, "nav" => $slug])?>">Edit</a></td>
         <?php if($_SESSION['role'] === "admin"):?>
         <td>
             <form method="POST" action="/admin/delete?<?php echo http_build_query(['page' => 'delete']); ?>">
                 <input type="hidden" name="id" value="<?php echo e($result->book_id);?>"/>
-                <input type="hidden" name="page" value="<?php echo e("authors");?>"/>
+                <input type="hidden" name="page" value="<?php echo e($slug);?>"/>
                 <input type="hidden" name="publisher" value="<?php echo e($result->publisher);?>"/>
                 <input type="submit" value="<?php echo $result->book_available ? e("Disable") : e("Enable") ?>">
             </form>

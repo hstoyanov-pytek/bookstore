@@ -1,5 +1,5 @@
 <?php
-if($page > $totalPages)
+if(!empty($totalPages) && $page > $totalPages)
 {
     $page = $totalPages;
     //regex built with the help of https://www.phpliveregex.com/#tab-preg-replace
