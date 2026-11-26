@@ -21,7 +21,11 @@
                     <a href="/admin/users">Users</a>
                 <?php endif; ?>
             </nav>
+            <hr>
+            <a href="/">Preview as User</a>
             <a href="/logout">Logout</a>
+            <hr>
+            <?php require_once $_SERVER['DOCUMENT_ROOT'] . FILTERS_PATH; ?>
         </header>
             <main>
                 <?php echo $contents; ?>

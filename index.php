@@ -69,6 +69,7 @@ $authServices->ensureSessionUnique();
 if(!$authServices->isLoggedIn())
 {
     $_SESSION['role'] = "user";
+    $_SESSION['permissions'] = 100;
 }
 
 $pagesController = $container->get("pagesController");

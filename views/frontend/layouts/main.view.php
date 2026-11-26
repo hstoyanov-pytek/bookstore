@@ -18,13 +18,18 @@
                 <a href="/languages">Languages</a>
                 <a href="/publishers">Publishers</a>
             </nav>
-
+            <hr>
+            <?php if(@$_SESSION['permissions'] > 100): ?>
+                <a href="/admin">Return to dashboard</a>
+            <?php endif; ?>
             <?php if($displayLoginNav):?>
                 <a href="/login">Login</a>
                 <a href="/register">Register</a>
             <?php else: ?>
                 <a href="/logout">Logout</a>
             <?php endif; ?>
+            <hr>
+            <?php require_once $_SERVER['DOCUMENT_ROOT'] . FILTERS_PATH; ?>
         </header>
             <main>
                 <?php echo $contents; ?>

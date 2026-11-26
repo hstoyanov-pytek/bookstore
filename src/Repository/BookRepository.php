@@ -20,13 +20,11 @@ class BookRepository
     /// RETURNS entry if it doesn't exist it creates it and returns it
     private function getEntry(string $table, array $whereParams, string $modelClass, array $insertCols = array(), array $insertVals = array()) : object
     {
-        $query = $this->database::$select
+        $foundEntry = $this->database::$select
             ->select()
             ->from($table)
-            ->where($whereParams);
-        var_dump($query);
-
-        $foundEntry = $query->getResult($modelClass);
+            ->where($whereParams)
+            ->getResult($modelClass);
 
         if(empty($foundEntry) && !empty($insertCols) && !empty($insertVals))
         {

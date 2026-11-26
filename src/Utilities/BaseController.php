@@ -245,4 +245,9 @@ abstract class BaseController
             )
         ));
     }
+
+    public function processFilters()
+    {
+
+    }
 }
