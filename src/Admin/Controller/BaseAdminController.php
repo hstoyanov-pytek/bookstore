@@ -4,17 +4,25 @@ namespace App\Admin\Controller;
 
 class BaseAdminController extends \App\Utilities\BaseController
 {
-    public function __construct(\App\Repository\BookRepository $bookRepository,
-                                \App\Utilities\AuthService $authService)
+    protected array $filterAuthors = array();
+    protected array $filterPublishers = array();
+    protected array $filterLanguages = array();
+    protected array $filterGenres = array();
+
+    public function __construct(
+        \App\Repository\BookRepository $bookRepository,
+        \App\Utilities\AuthService $authService
+    )
     {
         parent::__construct($bookRepository, $authService);
+        $this->showFilters = true;
     }
 
     #[\Override]
     protected function render(string $view, array $params = array()) : void
     {
-        parent::render($view, $params);
-        
+        parent::prepareFilters($this->filterAuthors, $this->filterLanguages, $this->filterPublishers, $this->filterGenres);
+
         extract($params);
 
         ob_start();

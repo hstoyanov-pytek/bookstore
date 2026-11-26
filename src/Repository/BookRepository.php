@@ -457,6 +457,68 @@ class BookRepository
         return $result->count;
     }
 
+///
+/// SELECT genres.name as name ,
+//    (SELECT COUNT(*)
+//    FROM book_genres
+//    WHERE book_genres.genres_id = genres.id
+//    ) as count
+//    FROM genres;
+    public function fetchAllBooksByGenreFilter(): array
+    {
+        $whereParams = $this->database->createParams(
+            cols:['book_genres.genres_id'],
+            alias:["id"],
+            values: ["genres.id"],
+            skip: [1],
+            operators:["="]);
+
+        $results = $this->database::$select
+            ->select(array(['cols' => 'genres.name', 'alias' => 'name']))
+            ->startSubQuery()
+            ->select(spec:SelectSpec::COUNT)
+            ->count()
+            ->from("book_genres")
+            ->where($whereParams)
+            ->endSubQuery()
+            ->addAs()
+            ->from("genres")
+            ->getResults(FilterModel::class);
+
+        return $results;
+    }
+
+//SELECT genres.name as name ,
+//(SELECT COUNT(*)
+//FROM book_genres
+//INNER JOIN book ON book_genres.book_id = book.id
+//WHERE book_genres.genres_id = genres.id AND book.available = 1
+//) as count
+//FROM genres;
+    public function fetchAvailableBooksByGenreFilter(): array
+    {
+        $whereParams = $this->database->createParams(
+            cols:['book_genres.genres_id', "book.available"],
+            alias:["id", "available"],
+            values: ['genres.id', 1],
+            skip: [1, 0],
+            operators:["=", "="]);
+
+        $results = $this->database::$select
+            ->select(array(['cols' => 'genres.name', 'alias' => 'name']))
+            ->startSubQuery()
+            ->select(spec:SelectSpec::COUNT)
+            ->count()
+            ->from("book_genres")
+            ->innerJoin("book", "book_genres.book_id = book.id")
+            ->where($whereParams)
+            ->endSubQuery()
+            ->addAs()
+            ->from("genres")
+            ->getResults(FilterModel::class);
+        return $results;
+    }
+
 
     // ============================================= Authors =================================================
 
@@ -587,7 +649,7 @@ class BookRepository
     {
         $whereParams = $this->database->createParams(
             cols:['book_author.author_id'],
-            alias:["authorId"],
+            alias:["id"],
             values: ["author.id"],
             skip: [1],
             operators:["="]);
@@ -600,7 +662,7 @@ class BookRepository
             ->from("book_author")
             ->where($whereParams)
             ->endSubQuery()
-            ->addAs("count")
+            ->addAs()
             ->from("author")
             ->getResults(FilterModel::class);
 
@@ -618,7 +680,7 @@ class BookRepository
     {
         $whereParams = $this->database->createParams(
             cols:['book_author.author_id', "book.available"],
-            alias:["authorId", "available"],
+            alias:["id", "available"],
             values: ['author.id', 1],
             skip: [1, 0],
             operators:["=", "="]);
@@ -632,9 +694,9 @@ class BookRepository
             ->innerJoin("book", "book_author.book_id = book.id")
             ->where($whereParams)
             ->endSubQuery()
-            ->addAs("count")
+            ->addAs()
             ->from("author")
-            ->getResults();
+            ->getResults(FilterModel::class);
         return $results;
     }
 
@@ -756,6 +818,66 @@ class BookRepository
         return $result->count;
     }
 
+//SELECT languages.name as name ,
+//(SELECT COUNT(*)
+//FROM book_languages
+//WHERE book_languages.languages_id = languages.id
+//) as count
+//FROM languages;
+    public function fetchAllBooksByLanguageFilter(): array
+    {
+        $whereParams = $this->database->createParams(
+            cols:['book_languages.languages_id'],
+            alias:["id"],
+            values: ["languages.id"],
+            skip: [1],
+            operators:["="]);
+
+        $results = $this->database::$select
+            ->select(array(['cols' => 'languages.name', 'alias' => 'name']))
+            ->startSubQuery()
+            ->select(spec:SelectSpec::COUNT)
+            ->count()
+            ->from("book_languages")
+            ->where($whereParams)
+            ->endSubQuery()
+            ->addAs()
+            ->from("languages")
+            ->getResults(FilterModel::class);
+
+        return $results;
+    }
+
+//SELECT languages.name as name ,
+//(SELECT COUNT(*)
+//FROM book_languages
+//INNER JOIN book ON book_languages.book_id = book.id
+//WHERE book_languages.languages_id = languages.id AND book.available = 1
+//) as count
+//FROM languages;
+    public function fetchAvailableBooksByLanguageFilter(): array
+    {
+        $whereParams = $this->database->createParams(
+            cols:['book_languages.languages_id', "book.available"],
+            alias:["id", "available"],
+            values: ['languages.id', 1],
+            skip: [1, 0],
+            operators:["=", "="]);
+
+        $results = $this->database::$select
+            ->select(array(['cols' => 'languages.name', 'alias' => 'name']))
+            ->startSubQuery()
+            ->select(spec:SelectSpec::COUNT)
+            ->count()
+            ->from("book_languages")
+            ->innerJoin("book", "book_languages.book_id = book.id")
+            ->where($whereParams)
+            ->endSubQuery()
+            ->addAs()
+            ->from("languages")
+            ->getResults(FilterModel::class);
+        return $results;
+    }
     // ============================================= Publishers =================================================
 
     public function fetchAllPublishers() : array
@@ -874,6 +996,66 @@ class BookRepository
 
         return $result->count;
     }
+
+//SELECT publisher.name as name ,
+//(SELECT COUNT(*)
+//FROM book
+//WHERE book.publisher_id = publisher.id
+//) as count
+//FROM publisher;
+    public function fetchAllBooksByPublisherFilter(): array
+    {
+        $whereParams = $this->database->createParams(
+            cols:['book.publisher_id'],
+            alias:["id"],
+            values: ["publisher.id"],
+            skip: [1],
+            operators:["="]);
+
+        $results = $this->database::$select
+            ->select(array(['cols' => 'publisher.name', 'alias' => 'name']))
+            ->startSubQuery()
+            ->select(spec:SelectSpec::COUNT)
+            ->count()
+            ->from("book")
+            ->where($whereParams)
+            ->endSubQuery()
+            ->addAs()
+            ->from("publisher")
+            ->getResults(FilterModel::class);
+
+        return $results;
+    }
+
+//SELECT publisher.name as name ,
+//(SELECT COUNT(*)
+//FROM book
+//WHERE book.publisher_id = publisher.id AND book.available = 1
+//) as count
+//FROM publisher;
+    public function fetchAvailableBooksByPublisherFilter(): array
+    {
+        $whereParams = $this->database->createParams(
+            cols:['book.publisher_id', "book.available"],
+            alias:["id", "available"],
+            values: ['publisher.id', 1],
+            skip: [1, 0],
+            operators:["=", "="]);
+
+        $results = $this->database::$select
+            ->select(array(['cols' => 'publisher.name', 'alias' => 'name']))
+            ->startSubQuery()
+            ->select(spec:SelectSpec::COUNT)
+            ->count()
+            ->from("book")
+            ->where($whereParams)
+            ->endSubQuery()
+            ->addAs()
+            ->from("publisher")
+            ->getResults(FilterModel::class);
+        return $results;
+    }
+
 
     // ============================================= All Books =================================================
     public function getAvailableBooksCount() : int

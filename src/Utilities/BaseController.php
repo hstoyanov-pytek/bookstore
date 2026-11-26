@@ -7,9 +7,11 @@ use \App\Utilities\StaticHelpers;
 
 abstract class BaseController
 {
+    protected bool $displayFilters = false;
+    
     public function __construct(
         protected \App\Repository\BookRepository $bookRepository,
-        protected AuthService $authService
+        protected AuthService $authService,
     ){}
 
     public function displayLoginNav() : bool
@@ -22,16 +24,7 @@ abstract class BaseController
         return true;
     }
 
-    /// IMPORTANT: To be treated as abstract!
-    protected function render(string $view, array $params = array()): void
-    {
-        $filterAuthors = array();
-        $filterPublishers = array();
-        $filterLanguages = array();
-        $filterGenres = array();
-
-        $this->prepareFilters($filterAuthors, $filterLanguages, $filterPublishers, $filterGenres);
-    }
+    abstract protected function render(string $view, array $params = array()): void;
 
     protected function displayPage(string $pageKey, array $params = array()) : void
     {
@@ -255,21 +248,22 @@ abstract class BaseController
         ));
     }
 
-    private function prepareFilters(array &$authors, array &$languages, array &$publishers, array &$genres)
+    protected function prepareFilters(array &$authors, array &$languages, array &$publishers, array &$genres)
     {
-        $authors = $this->bookRepository->fetchAvailableBooksByAuthorFilter();
-
-//        if($_SESSION['permissions'] > 100) // Check if the permissions match the ones for the admin/editor
-//        {
-//            $authors = $this->bookRepository->fetchAllBooksByAuthorFilter();
-//            $languages = $this->bookRepository->fetchAllLanguages();
-//            $publishers = $this->bookRepository->fetchAllPublishers();
-//            $genres = $this->bookRepository->fetchAllGenres();
-//        }
-//        else
-//        {
-//
-//        }
+        if($_SESSION['permissions'] > 100) // Check if the permissions match the ones for the admin/editor
+        {
+            $authors = $this->bookRepository->fetchAllBooksByAuthorFilter();
+            $languages = $this->bookRepository->fetchAllBooksByLanguageFilter();
+            $publishers = $this->bookRepository->fetchAllBooksByPublisherFilter();
+            $genres = $this->bookRepository->fetchAllBooksByGenreFilter();
+        }
+        else
+        {
+            $authors = $this->bookRepository->fetchAvailableBooksByAuthorFilter();
+            $languages = $this->bookRepository->fetchAvailableBooksByLanguageFilter();
+            $publishers = $this->bookRepository->fetchAvailableBooksByPublisherFilter();
+            $genres = $this->bookRepository->fetchAvailableBooksByGenreFilter();
+        }
     }
 
     public function processFilters()

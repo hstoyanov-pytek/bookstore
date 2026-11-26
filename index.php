@@ -108,7 +108,7 @@ if($authServices->isLoggedIn() && ($_SESSION['role'] === "admin" || $_SESSION['r
         $router->add("POST", '/admin/create', [$adminController, 'createBookEntry']);
     }
 
-    if($_SESSION['permissions'] === 111)
+    if($permissions === 111)
     {
         $router->add("POST", '/admin/delete', [$adminController, 'deleteBookEntryById']);
         $router->add("GET", '/admin/users', [$adminController, 'displayAllUsers']);

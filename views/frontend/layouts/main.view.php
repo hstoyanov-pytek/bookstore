@@ -29,7 +29,9 @@
                 <a href="/logout">Logout</a>
             <?php endif; ?>
             <hr>
-            <?php require_once $_SERVER['DOCUMENT_ROOT'] . FILTERS_PATH; ?>
+            <?php if($this->showFilters):?>
+                <?php require_once $_SERVER['DOCUMENT_ROOT'] . FILTERS_PATH; ?>
+            <?php endif;?>
         </header>
             <main>
                 <?php echo $contents; ?>

@@ -8,6 +8,7 @@ class GatewayController extends BaseGatewayController
         \App\Utilities\AuthService $authService
     ){
         parent::__construct($authService);
+        $this->showFilters = false;
     }
 
     public function login() : void
