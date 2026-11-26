@@ -23,11 +23,6 @@ class PagesController extends BaseFrontendController
             'nextHref' => "?" . http_build_query(['page' => min($page + 1, $totalPages)])
         ]);
 
-        if(empty($results))
-        {
-            echo "No results found";
-        }
-
         $this->displayPage("index", array_merge(
             $paginationArray,
             array(
