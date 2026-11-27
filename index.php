@@ -84,6 +84,8 @@ $router->add("GET", '/authors', [$pagesController, 'displayAllAuthors']);
 $router->add("GET", '/genres', [$pagesController, 'displayAllGenres']);
 $router->add("GET", '/languages', [$pagesController, 'displayAllLanguages']);
 $router->add("GET", '/publishers', [$pagesController, 'displayAllPublishers']);
+$router->add("GET", '/filter', [$pagesController, 'displayFilteredResults']);
+$router->add("POST", '/filter', [$pagesController, 'displayFilteredResults']);
 
 $router->add("GET", '/login', [$gatewayController, 'login']);
 $router->add("GET", '/logout', [$gatewayController, 'logout']);
@@ -98,6 +100,8 @@ if($authServices->isLoggedIn() && ($_SESSION['role'] === "admin" || $_SESSION['r
     if($permissions >= 110)
     {
         $router->add("GET", '/admin', [$adminController, 'displayAdminDashboard']);
+        $router->add("GET", '/admin/filter', [$adminController, 'displayFilteredResults']);
+        $router->add("POST", '/admin/filter', [$adminController, 'displayFilteredResults']);
         $router->add("GET", '/admin/edit', [$adminController, 'editBookEntry']);
         $router->add("GET", '/admin/create', [$adminController, 'createBookEntry']);
         $router->add("GET", '/admin/authors', [$adminController, 'displayAllAuthors']);

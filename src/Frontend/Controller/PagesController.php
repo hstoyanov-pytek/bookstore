@@ -10,7 +10,38 @@ class PagesController extends BaseFrontendController
         parent::__construct($bookRepository, $authService);
     }
 
-    public function displayLandingPage() : void
+    public function displayFilteredResults() : void
+    {
+        if(!empty($_POST))
+        {
+            $rawFilters = $_POST;
+
+            $filters = $this->processFilters($rawFilters);
+
+            $page = empty($_GET['page']) ? 1 : @(int)($_GET['page']);
+            $entriesCount = $this->bookRepository->getAllBooksCount();
+            $totalPages = ceil($entriesCount / RESULTS_DISPLAYED_ON_PAGE);
+            
+            $results = $this->bookRepository->fetchAvailableBooksByFilter($filters, $page, RESULTS_DISPLAYED_ON_PAGE);
+
+            $paginationArray = StaticHelpers::createPaginationParams($page, $totalPages, [
+                'previousHref' => "?" . http_build_query(['page' => max(1, $page - 1)]),
+                'nextHref' => "?" . http_build_query(['page' => min($page + 1, $totalPages)])
+            ]);
+
+            $this->displayPage("index", array_merge(
+                $paginationArray,
+                array(
+                    'rawFilters' => $rawFilters,
+                    'results' => $results
+                )
+            ));
+        }
+
+        $this->displayLandingPage();
+    }
+
+    public function displayLandingPage($rawFilters = array()) : void
     {
         $page = empty($_GET['page']) ? 1 : @(int)($_GET['page']);
         $entriesCount = $this->bookRepository->getAvailableBooksCount();
@@ -26,6 +57,7 @@ class PagesController extends BaseFrontendController
         $this->displayPage("index", array_merge(
             $paginationArray,
             array(
+                'rawFilters' => $rawFilters,
                 'results' => $results
             )
         ));

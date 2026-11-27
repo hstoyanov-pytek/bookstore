@@ -10,6 +10,7 @@ use \App\Model\BookDetailsDTO;
 use \App\Model\CountModel;
 use \App\Model\FilterModel;
 use App\Utilities\Database\SelectSpec;
+use App\Utilities\WhereOp;
 
 class BookRepository
 {
@@ -180,6 +181,20 @@ class BookRepository
             ->getResults(BookDetailsDTO::class);
 
         return $results;
+    }
+
+    private function parseFilters(array $inFilter, array &$outCols, array &$outValues, array &$outAlias, array &$outOperators) : void
+    {
+        foreach ($inFilter as $i => $value)
+        {
+            foreach ($value as $key => $val)
+            {
+                $outCols[] = $key . ".name";
+                $outValues[] = "%{$val}%";
+                $outAlias[] = $key. "Name" . $i;
+                $outOperators[] = " LIKE ";
+            }
+        }
     }
 
     // ============================================= CRUD =================================================
@@ -1222,5 +1237,176 @@ class BookRepository
     public function fetchAllAvailableBooksByPage(int $page, int $limit) : array
     {
         return $this->fetchAvailableByPageWhere(array(), $page, $limit);
+    }
+
+//
+//SELECT
+//book.id as book_id,
+//book.title as book_title,
+//book.year_published as year_published,
+//book.available as book_available,
+//book.cover_name as book_cover_name,
+//publisher.name as publisher,
+//author.name as book_author,
+//genres.name as book_genres,
+//languages.name as book_languages
+//
+//FROM book
+//INNER JOIN publisher ON book.publisher_id = publisher.id
+//
+//INNER JOIN book_author ON book.id = book_author.book_id
+//INNER JOIN author ON book_author.author_id = author.id
+//
+//INNER JOIN book_genres ON book.id = book_genres.book_id
+//INNER JOIN genres ON book_genres.genres_id = genres.id
+//
+//INNER JOIN book_languages ON book.id = book_languages.book_id
+//INNER JOIN languages ON book_languages.languages_id = languages.id
+//
+//WHERE (author.name LIKE "%George Orwell%" OR languages.name LIKE "%Dhivehi%" OR publisher.name LIKE "%WILLY WONKA%")
+//ORDER BY book.id;
+    public function fetchAllBooksByFilter(array $filter, int $page, int $limit) : array
+    {
+        $offset = ($page - 1) * $limit;
+
+        $cols = array();
+        $alias = array();
+        $values = array();
+        $operators = array();
+
+        $this->parseFilters($filter, $cols, $values, $alias, $operators);
+
+        $whereParams = $this->database->createParams(cols: $cols, alias: $alias, values: $values, operators: $operators);
+        $selectParams = $this->database->createSelectParams(
+            cols:[
+                'book.id',
+                'book.title',
+                'book.year_published',
+                'book.available',
+                'publisher.name',
+                'author.name',
+                'genres.name',
+                'languages.name',
+                'book.cover_name'
+            ],
+            alias: [
+                'book_id',
+                'book_title',
+                'year_published',
+                'book_available',
+                'publisher',
+                'book_author',
+                'book_genres',
+                'book_languages',
+                "book_cover_name"
+            ]
+        );
+
+        $results = $this->database::$select
+            ->select($selectParams)
+            ->from("book")
+            ->innerJoin("publisher", "book.publisher_id = publisher.id")
+
+            ->innerJoin("book_author", "book.id = book_author.book_id")
+            ->innerJoin("author", "book_author.author_id = author.id")
+
+            ->innerJoin("book_genres", "book.id = book_genres.book_id")
+            ->innerJoin("genres", "book_genres.genres_id = genres.id")
+
+            ->innerJoin("book_languages", "book.id = book_languages.book_id")
+            ->innerJoin("languages", "book_languages.languages_id = languages.id")
+
+            ->where($whereParams, WhereOp::OR)
+            ->orderBy(['book.id'])
+            ->limit($limit, $offset)
+            ->getResults(BookDetailsDTO::class);
+
+        return $results;
+    }
+    
+//SELECT
+//book.id as book_id,
+//book.title as book_title,
+//book.year_published as year_published,
+//book.available as book_available,
+//book.cover_name as book_cover_name,
+//publisher.name as publisher,
+//author.name as book_author,
+//genres.name as book_genres,
+//languages.name as book_languages
+//
+//FROM book
+//INNER JOIN publisher ON book.publisher_id = publisher.id
+//
+//INNER JOIN book_author ON book.id = book_author.book_id
+//INNER JOIN author ON book_author.author_id = author.id
+//
+//INNER JOIN book_genres ON book.id = book_genres.book_id
+//INNER JOIN genres ON book_genres.genres_id = genres.id
+//
+//INNER JOIN book_languages ON book.id = book_languages.book_id
+//INNER JOIN languages ON book_languages.languages_id = languages.id
+//
+//WHERE (author.name LIKE "%George Orwell%" OR languages.name LIKE "%Dhivehi%" OR publisher.name LIKE "%WILLY WONKA%") AND book.available LIKE 1
+//ORDER BY book.id;
+    public function fetchAvailableBooksByFilter(array $filter, int $page, int $limit) : array
+    {
+        $offset = ($page - 1) * $limit;
+
+        $cols = array();
+        $alias = array();
+        $values = array();
+        $operators = array();
+
+        $this->parseFilters($filter, $cols, $values, $alias, $operators);
+
+        $whereParams = $this->database->createParams(cols: $cols, alias: $alias, values: $values, operators: $operators);
+        $andWhereParams = $this->database->createParams(cols:['book.available'], alias: ["available"], values: [1], operators: ["="]);
+        $selectParams = $this->database->createSelectParams(
+            cols:[
+                'book.id',
+                'book.title',
+                'book.year_published',
+                'book.available',
+                'publisher.name',
+                'author.name',
+                'genres.name',
+                'languages.name',
+                'book.cover_name'
+            ],
+            alias: [
+                'book_id',
+                'book_title',
+                'year_published',
+                'book_available',
+                'publisher',
+                'book_author',
+                'book_genres',
+                'book_languages',
+                "book_cover_name"
+            ]
+        );
+
+        $results = $this->database::$select
+            ->select($selectParams)
+            ->from("book")
+            ->innerJoin("publisher", "book.publisher_id = publisher.id")
+
+            ->innerJoin("book_author", "book.id = book_author.book_id")
+            ->innerJoin("author", "book_author.author_id = author.id")
+
+            ->innerJoin("book_genres", "book.id = book_genres.book_id")
+            ->innerJoin("genres", "book_genres.genres_id = genres.id")
+
+            ->innerJoin("book_languages", "book.id = book_languages.book_id")
+            ->innerJoin("languages", "book_languages.languages_id = languages.id")
+
+            ->where($whereParams, WhereOp::OR, true)
+            ->appendAndWhere($andWhereParams)
+            ->orderBy(['book.id'])
+            ->limit($limit, $offset)
+            ->getResults(BookDetailsDTO::class);
+
+        return $results;
     }
 }

@@ -14,7 +14,6 @@ abstract class BaseQuery
     protected array $binds = array();
     ///
     /// $conditions = assoc_array/string of conditions that need to be met for the query to go through
-    /// string => "A > B OR C = D AND id BETWEEN 3 AND 30"; ...
     /// array[] =>
     ///     ['col' => 'id',
     //    'value' => '1',
@@ -31,11 +30,13 @@ abstract class BaseQuery
     /// Only one operator can be applied for a query, if NOT is selected, then it will be applied at the beginning of the query
     /// and the operator will be ignored and, AND will be applied instead
     ///
-    public function where(array $condition, WhereOp $operator = WhereOp::AND) : object
+    public function where(array $condition, WhereOp $operator = WhereOp::AND, bool $encapsulate = false) : object
     {
         $this->queryString .= " WHERE ";
 
         if($operator === WhereOp::NOT) $this->queryString .= $operator->value;
+
+        if($encapsulate) $this->queryString .= " (";
 
         if(empty($condition))
         {
@@ -73,6 +74,31 @@ abstract class BaseQuery
                 $this->queryString .= ($i !== array_key_last($condition)) ?
                     "{$value['col']} {$value['operator']} :{$value['alias']} " . ($operator === WhereOp::NOT ? WhereOp::AND->value : $operator->value)
                     : "{$value['col']} {$value['operator']} :{$value['alias']} ";
+
+                $this->createBinds($value['alias'], $value['value']);
+            }
+        }
+
+        if($encapsulate) $this->queryString .= ") ";
+
+        return $this;
+    }
+
+    public function appendAndWhere(array $condition) : object
+    {
+        $this->queryString .= " AND ";
+
+        foreach ($condition as $i => $value)
+        {
+            if(empty($value['alias']))
+            {
+                $this->queryString .=  "{$value['col']} {$value['operator']} :{$value['col']} ";
+
+                $this->createBinds($value['col'], $value['value']);
+            }
+            else
+            {
+                $this->queryString .= "{$value['col']} {$value['operator']} :{$value['alias']} ";
 
                 $this->createBinds($value['alias'], $value['value']);
             }

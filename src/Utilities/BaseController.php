@@ -266,8 +266,29 @@ abstract class BaseController
         }
     }
 
-    public function processFilters()
+    protected function processFilters(array $rawFilters) : array
     {
+        $filters = array();
+        foreach ($rawFilters as $key => $post)
+        {
+            if (preg_match("/author/", $key))
+            {
+                $filters[] = ['author' => $post];
+            }
+            else if (preg_match("/publisher/", $key))
+            {
+                $filters[] = ['publisher' => $post];
+            }
+            else if (preg_match("/genre/", $key))
+            {
+                $filters[] = ['genres' => $post];
+            }
+            else if (preg_match("/language/", $key))
+            {
+                $filters[] = ['languages' => $post];
+            }
+        }
 
+        return $filters;
     }
 }

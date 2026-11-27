@@ -197,7 +197,7 @@ class AdminController extends BaseAdminController
 
     //================================ Admin Functionality ================================
 
-    public function displayAdminDashboard() : void
+    public function displayAdminDashboard(array $rawFilters = array()) : void
     {
         $page = @($_GET['page']) ?? 1;
         $entriesCount = $this->bookRepository->getAllBooksCount();
@@ -213,9 +213,41 @@ class AdminController extends BaseAdminController
         $this->render("pages/index", array_merge(
                 $paginationArray,
                 array(
+                    'rawFilters' => $rawFilters,
                     'results' => $results,
                 )
             ));
+    }
+
+    public function displayFilteredResults() : void
+    {
+        if(!empty($_POST))
+        {
+            $rawFilters = $_POST;
+
+            $filters = $this->processFilters($rawFilters);
+            
+            $page = @($_GET['page']) ?? 1;
+            $entriesCount = $this->bookRepository->getAllBooksCount();
+            $totalPages = ceil($entriesCount / RESULTS_DISPLAYED_ON_PAGE);
+
+            $results = $this->bookRepository->fetchAllBooksByFilter($filters, $page, RESULTS_DISPLAYED_ON_PAGE);
+
+            $paginationArray = StaticHelpers::createPaginationParams($page, $totalPages, [
+                'previousHref' => "/admin?" . http_build_query(['page' => max(1, $page - 1)]),
+                'nextHref' => "/admin?" . http_build_query(['page' => min($page + 1, $totalPages)])
+            ]);
+
+            $this->render("pages/index", array_merge(
+                $paginationArray,
+                array(
+                    'rawFilters' => $rawFilters,
+                    'results' => $results,
+                )
+            ));
+        }
+
+        $this->displayAdminDashboard();
     }
 
     public function deleteBookEntryById() : void
