@@ -36,10 +36,11 @@
         <?php endforeach;?>
     </select>
 
+    <?php if($_SESSION['permissions'] > 110):?>
     <label for="available">Available:</label>
     <input type="checkbox" value="true" name="available" id="available"
            <?php echo $result->book_available ? e("checked") : ""; ?>/>
-
+    <?php endif; ?>
     <br>
     <label for="cover">Cover Image</label>
     <input type="file" id="cover" name="cover"/>

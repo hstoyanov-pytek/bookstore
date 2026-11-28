@@ -28,10 +28,12 @@ abstract class BaseController
 
     protected function displayPage(string $pageKey, array $params = array()) : void
     {
+        $params = array_merge(['rawFilters' => array()], $params);
         $this->render('pages/'. $pageKey, $params);
     }
     protected function displayNavigation(string $pageKey, array $params = array()) : void
     {
+        $params = array_merge(['rawFilters' => array()], $params);
         $this->render('navigation/'. $pageKey, $params);
     }
 
