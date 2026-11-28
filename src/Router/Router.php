@@ -32,12 +32,12 @@ class Router
 
         foreach ($this->routes as $route)
         {
+            [$controller, $function] = $route['controller'];
+
             if(!preg_match("#^{$route['path']}$#", $path) || $route['method'] !== $method)
             {
                 continue;
             }
-
-            [$controller, $function] = $route['controller'];
 
             if(    $controller instanceof \App\Frontend\Controller\BaseFrontendController
                 || $controller instanceof \App\Gateway\Controller\BaseGatewayController

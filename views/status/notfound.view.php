@@ -28,3 +28,5 @@
         </div>
     </div>
 </div>
+
+<?php die(); ?>
